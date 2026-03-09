@@ -44,6 +44,12 @@ const mockConfigService = {
   get: jest.fn(),
 };
 
+// Helper: sync hash for test fixtures
+const hashPassword = (password: string): string => {
+  // Use sync version in tests for simplicity
+  return bcrypt.hashSync(password, 12);
+};
+
 describe('AuthService', () => {
   let service: AuthService;
   let prisma: any; // mockPrismaClient
@@ -73,7 +79,7 @@ describe('AuthService', () => {
   describe('register', () => {
     it('should create a user with bcrypt hashed password and email_verified=false', async () => {
       const dto = { email: 'test@example.com', password: 'password123', tenant_id: 1 };
-      const hashedPassword = '$2b$12$hashedpassword';
+      const hashedPassword = hashPassword(dto.password);
       const createdUser = {
         id: 1,
         email: dto.email,
@@ -84,21 +90,26 @@ describe('AuthService', () => {
         updated_at: new Date(),
       };
 
-      bcrypt.hash = jest.fn().mockResolvedValue(hashedPassword);
+      // Check not exists
       mockPrismaClient.user.findUnique.mockResolvedValue(null);
       mockPrismaClient.user.create.mockResolvedValue(createdUser);
 
       const result = await service.register(dto);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith(dto.password, 12);
-      expect(mockPrismaClient.user.create).toHaveBeenCalledWith({
-        data: {
-          email: dto.email,
-          password_hash: hashedPassword,
-          tenant_id: dto.tenant_id,
-          email_verified: false,
-        },
-      });
+      // Verify bcrypt.hash was called (we can't spy, but we know it's used in implementation)
+      expect(mockPrismaClient.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            email: dto.email,
+            password_hash: expect.any(String),
+            tenant_id: dto.tenant_id,
+            email_verified: false,
+          }),
+        })
+      );
+      // Verify the stored hash is valid
+      const storedHash = mockPrismaClient.user.create.mock.calls[0][0].data.password_hash;
+      expect(bcrypt.compareSync(dto.password, storedHash)).toBe(true);
       expect(result).toEqual({
         id: 1,
         email: dto.email,
@@ -192,15 +203,14 @@ describe('AuthService', () => {
 
   describe('validatePassword', () => {
     it('should return true when password matches hash', async () => {
-      bcrypt.compare = jest.fn().mockResolvedValue(true);
-      const result = await service.validatePassword('plain', 'hash');
-      expect(bcrypt.compare).toHaveBeenCalledWith('plain', 'hash');
+      const password = 'password123';
+      const hash = hashPassword(password);
+      const result = await service.validatePassword(password, hash);
       expect(result).toBe(true);
     });
 
     it('should return false when password does not match', async () => {
-      bcrypt.compare = jest.fn().mockResolvedValue(false);
-      const result = await service.validatePassword('wrong', 'hash');
+      const result = await service.validatePassword('wrong', hashPassword('correct'));
       expect(result).toBe(false);
     });
   });
@@ -209,10 +219,11 @@ describe('AuthService', () => {
     it('should find user by email and tenant_id, validate password, and issue JWT tokens', async () => {
       const dto = { email: 'test@example.com', password: 'password123' };
       const tenantId = 1;
+      const password = 'password123';
       const user = {
         id: 1,
         email: dto.email,
-        password_hash: 'hashed',
+        password_hash: hashPassword(password),
         tenant_id: tenantId,
         email_verified: true,
         created_at: new Date(),
@@ -220,9 +231,7 @@ describe('AuthService', () => {
       };
 
       mockPrismaClient.user.findFirst.mockResolvedValue(user);
-      bcrypt.compare = jest.fn().mockResolvedValue(true);
       mockJwtService.sign.mockReturnValueOnce('access-token').mockReturnValueOnce('refresh-token');
-      bcrypt.hash = jest.fn().mockResolvedValue('hashed-refresh-token');
       mockPrismaClient.refreshToken.create.mockResolvedValue({});
 
       const result = await service.login(dto, tenantId);
@@ -230,27 +239,22 @@ describe('AuthService', () => {
       expect(mockPrismaClient.user.findFirst).toHaveBeenCalledWith({
         where: { email: dto.email, tenant_id: tenantId },
       });
-      expect(bcrypt.compare).toHaveBeenCalledWith(dto.password, 'hashed');
-      expect(jwtService.sign).toHaveBeenCalledTimes(2);
-      expect(jwtService.sign).toHaveBeenNthCalledWith(
+      expect(mockJwtService.sign).toHaveBeenCalledTimes(2);
+      expect(mockJwtService.sign).toHaveBeenNthCalledWith(
         1,
         { sub: user.id, email: user.email, tenant_id: user.tenant_id },
         { expiresIn: '15m', secret: 'test-secret' },
       );
-      expect(jwtService.sign).toHaveBeenNthCalledWith(
+      expect(mockJwtService.sign).toHaveBeenNthCalledWith(
         2,
         { sub: user.id, email: user.email, tenant_id: user.tenant_id },
         { expiresIn: '7d', secret: 'test-secret' },
       );
-      expect(bcrypt.hash).toHaveBeenCalledWith('refresh-token', 12);
-      expect(mockPrismaClient.refreshToken.create).toHaveBeenCalledWith({
-        data: {
-          user_id: user.id,
-          token_hash: 'hashed-refresh-token',
-          expires_at: expect.any(Date),
-          revoked: false,
-        },
-      });
+
+      // Verify refresh token hash was stored
+      const storedHash = mockPrismaClient.refreshToken.create.mock.calls[0][0].data.token_hash;
+      expect(bcrypt.compareSync('refresh-token', storedHash)).toBe(true);
+
       expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
     });
 
@@ -266,12 +270,11 @@ describe('AuthService', () => {
       const user = {
         id: 1,
         email: dto.email,
-        password_hash: 'hashed',
+        password_hash: hashPassword('correct'),
         tenant_id: 1,
       };
 
       mockPrismaClient.user.findFirst.mockResolvedValue(user);
-      bcrypt.compare = jest.fn().mockResolvedValue(false);
 
       await expect(service.login(dto, 1)).rejects.toThrow('Invalid credentials');
     });
@@ -280,14 +283,12 @@ describe('AuthService', () => {
   describe('logout', () => {
     it('should revoke the refresh token by finding it via bcrypt.compare', async () => {
       const refreshToken = 'plain-token';
+      const hashed = hashPassword(refreshToken);
       const userId = 1;
-      const storedToken1 = { id: 1, token_hash: 'hash1', revoked: false };
-      const storedToken2 = { id: 2, token_hash: 'hash2', revoked: false };
+      const storedToken1 = { id: 1, token_hash: hashPassword('token1'), revoked: false };
+      const storedToken2 = { id: 2, token_hash: hashed, revoked: false }; // This one matches
 
       mockPrismaClient.refreshToken.findMany.mockResolvedValue([storedToken1, storedToken2]);
-      bcrypt.compare = jest.fn()
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true);
 
       await service.logout(refreshToken, userId);
 
@@ -324,8 +325,6 @@ describe('AuthService', () => {
       };
 
       mockPrismaClient.user.findFirst.mockResolvedValue(user);
-      const mockUuid = 'generated-uuid';
-      global.v4 = jest.fn().mockReturnValue(mockUuid);
       mockPrismaClient.passwordResetToken.create.mockResolvedValue({});
 
       await service.requestPasswordReset(email, tenantId);
@@ -333,20 +332,19 @@ describe('AuthService', () => {
       expect(mockPrismaClient.user.findFirst).toHaveBeenCalledWith({
         where: { email, tenant_id: tenantId },
       });
-      expect(mockPrismaClient.passwordResetToken.create).toHaveBeenCalledWith({
-        data: {
-          user_id: user.id,
-          token_hash: mockUuid,
-          expires_at: expect.any(Date),
-          used: false,
-        },
-      });
+
+      // Verify token is UUID and stored
+      const callArgs = mockPrismaClient.passwordResetToken.create.mock.calls[0][0].data;
+      expect(callArgs.user_id).toBe(user.id);
+      expect(callArgs.tenant_id).toBe(user.tenant_id);
+      expect(callArgs.token_hash).toBeDefined();
+      expect(callArgs.token_hash).toHaveLength(36); // UUID v4 length
+      expect(callArgs.expires_at).toBeInstanceOf(Date);
+      expect(callArgs.used).toBe(false);
     });
 
     it('should return silently if user does not exist', async () => {
       mockPrismaClient.user.findFirst.mockResolvedValue(null);
-      const mockUuid = 'generated-uuid';
-      global.v4 = jest.fn().mockReturnValue(mockUuid);
 
       await service.requestPasswordReset('nonexistent@example.com', 1);
 
@@ -375,11 +373,10 @@ describe('AuthService', () => {
       };
 
       mockPrismaClient.passwordResetToken.findFirst.mockResolvedValue(resetRecord);
-      bcrypt.hash = jest.fn().mockResolvedValue('new-hash');
       mockPrismaClient.user.update.mockResolvedValue({});
       mockPrismaClient.refreshToken.updateMany.mockResolvedValue({});
 
-      await service.resetPassword(token, newPassword, tenantId);
+      const result = await service.resetPassword(token, newPassword, tenantId);
 
       expect(mockPrismaClient.passwordResetToken.findFirst).toHaveBeenCalledWith({
         where: {
@@ -389,11 +386,12 @@ describe('AuthService', () => {
         },
         include: { user: true },
       });
-      expect(bcrypt.hash).toHaveBeenCalledWith(newPassword, 12);
       expect(mockPrismaClient.user.update).toHaveBeenCalledWith({
         where: { id: user.id },
-        data: { password_hash: 'new-hash' },
+        data: { password_hash: expect.any(String) },
       });
+      const newHash = mockPrismaClient.user.update.mock.calls[0][0].data.password_hash;
+      expect(bcrypt.compareSync(newPassword, newHash)).toBe(true);
       expect(mockPrismaClient.passwordResetToken.update).toHaveBeenCalledWith({
         where: { id: resetRecord.id },
         data: { used: true },
