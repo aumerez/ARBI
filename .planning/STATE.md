@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed 01-backend-mvp-06a-PLAN-06a-encryption-audit-tables.md
-last_updated: "2026-03-09T20:24:00.000Z"
-last_activity: "2026-03-09 — Completed Plan 06a: Encryption service and audit tables"
+status: completed
+stopped_at: Completed 01-backend-mvp-06b-PLAN-06b-audit-logging.md
+last_updated: "2026-03-09T20:28:58.731Z"
+last_activity: "2026-03-09 — Completed Plan 06b: Audit logging service and middleware"
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 24
-  completed_plans: 24
+  total_plans: 0
+  completed_plans: 26
   percent: 100
 ---
 
@@ -26,21 +26,22 @@ See: .planning/PROJECT.md (updated 2025-03-08)
 ## Current Position
 
 Phase: 1 of 5 (Backend MVP)
-Plan: Wave 1 infrastructure complete, Wave 3 Document pipeline complete (04a-04f), Wave 13 Chat complete (05a-05e), Wave 18 Security foundations complete (06a)
-Status: Completed Plan 06a: Encryption service and audit tables
-Last activity: 2026-03-09 — Completed Plan 06a: Encryption service and audit tables
-Progress: ██████████▉ 100% (24/24 core plans complete, 110+ tests added)
+Plan: Wave 1 infrastructure complete, Wave 3 Document pipeline complete (04a-04f), Wave 13 Chat complete (05a-05e), Wave 18 Security foundations complete (06a-06b)
+Status: Completed Plan 06b: Audit logging service and middleware
+Last activity: 2026-03-09 — Completed Plan 06b: Audit logging service and middleware
+Progress: ██████████▉ 100% (25/25 core plans complete, 120+ tests added)
 
 Wave 3 progress: 04a (workers) ✓, 04b (chunking) ✓, 04c (status) ✓, 04d (upload) ✓, 04e (integration) ✓, 04f (testing)
 Wave 13 progress: 05a (conversations) ✓, 05b (hybrid search) ✓, 05c (reranker) ✓, 05d (LLM generation) ✓, 05e (citation validation) ✓
-Wave 18 progress: 06a (encryption & audit) ✓
+Wave 18 progress: 06a (encryption) ✓, 06b (audit logging) ✓
+Wave 19 progress: 06c (test coverage) □
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: ~7.1 min (7 plans total ~50 min)
-- Total execution time: ~0.6 hours (estimated)
+- Total plans completed: 8
+- Average duration: ~7.5 min (8 plans total ~60 min)
+- Total execution time: ~0.7 hours (estimated)
 
 **By Phase:**
 
@@ -72,6 +73,8 @@ Wave 18 progress: 06a (encryption & audit) ✓
 | Phase 01-backend-mvp P05d | 5 | 2 tasks | 2 files |
 | Phase 01-backend-mvp P05e | 15 | 2 tasks | 5 files |
 | Phase 01-backend-mvp P06a | 15min | 2 tasks | 3 files |
+| Phase 01-backend-mvp P06b | 15min | 3 tasks | 5 files |
+| Phase 01-backend-mvp P06b | 15min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -79,6 +82,12 @@ Wave 18 progress: 06a (encryption & audit) ✓
 
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
+
+- [Plan 06b]: Audit failures are caught and logged but not thrown - audit should never break main request flow (graceful degradation)
+- [Plan 06b]: Middleware uses NestMiddleware instead of interceptor for simpler response lifecycle management
+- [Plan 06b]: User identification via JWT payload (req.user.sub) for authenticated actions only
+- [Plan 06b]: Request/response bodies limited to 1KB, captured only for chat/document endpoints (configurable)
+- [Plan 06b]: Tenant context obtained via DatabaseService.getCurrentTenant() for consistent multi-tenant isolation
 
 - [Plan 04e]: Use RedisService.getConnection() pattern for queue factory (consistent with 04d)
 - [Plan 04e]: Provide both queues as injectable tokens (DOCUMENT_UPLOAD_QUEUE, EMBEDDING_QUEUE) rather than creating inline
@@ -128,6 +137,9 @@ Recent decisions affecting current work:
 - [Plan 06a]: Encryption key derived with scryptSync for defense-in-depth (adds salting even with single key)
 - [Plan 06a]: Audit payload stored as JSONB for flexible event schema evolution
 - [Plan 06a]: RLS policy uses current_setting('app.current_tenant') requiring middleware to set context
+- [Phase 01-backend-mvp]: Audit failures caught and logged but not thrown - graceful degradation pattern
+- [Phase 01-backend-mvp]: Middleware uses NestMiddleware instead of interceptor for simpler lifecycle
+- [Phase 01-backend-mvp]: Request/response bodies 1KB limit, captured only for chat/doc endpoints (configurable)
 
 ### Pending Todos
 
@@ -139,6 +151,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-09T20:05:00Z
-Stopped at: Completed 01-backend-mvp-05e-PLAN-05e-citation-validator.md
+Last session: 2026-03-09T20:28:58.728Z
+Stopped at: Completed 01-backend-mvp-06b-PLAN-06b-audit-logging.md
 Resume file: None
