@@ -4,15 +4,21 @@ import { Redis } from 'ioredis';
 import { PDFProcessor } from '../processors/pdf.processor';
 import { DOCXProcessor } from '../processors/docx.processor';
 import { TXTProcessor } from '../processors/txt.processor';
+import { TextSplitterService } from '../chunking/text-splitter.service';
+import { Inject } from '@nestjs/common';
 
 export class DocumentUploadWorker extends Worker {
   constructor(
     private database: DatabaseService,
-    private redisConn: Redis,
+    @Inject('EMBEDDING_QUEUE') private embeddingQueue: Queue,
+    private textSplitter: TextSplitterService,
+    private redis: Redis,
   ) {
-    // Capture dependencies in local closure
     const databaseRef = database;
-    const redisRef = redisConn;
+    const embeddingQueueRef = embeddingQueue;
+    const textSplitterRef = textSplitter;
+    const redisRef = redis;
+
 
     // Define processor function that uses closures
     const processor = async (job: Job) => {
@@ -41,17 +47,8 @@ export class DocumentUploadWorker extends Worker {
           throw new Error(`Unsupported mimetype: ${mimetype}`);
         }
 
-        // Basic inline chunking (will be replaced by TextSplitterService in 04b)
-        const chunkSize = 1000;
-        const chunkOverlap = 200;
-        const chunks: string[] = [];
-        let start = 0;
-
-        while (start < text.length) {
-          const end = Math.min(start + chunkSize, text.length);
-          chunks.push(text.slice(start, end));
-          start += chunkSize - chunkOverlap;
-        }
+        // Use TextSplitterService for semantic chunking (replaces inline chunking)
+        const chunks = await textSplitterRef.splitText(text);
 
         // Get document's tenant_id
         const document = await prisma.document.findUnique({
@@ -82,12 +79,9 @@ export class DocumentUploadWorker extends Worker {
         });
         const chunkIds = createdChunks.map(c => c.id);
 
-        // Add jobs to embedding-generation queue
-        const embeddingQueue = new Queue('embedding-generation', {
-          connection: redisRef as any,
-        });
+        // Enqueue embedding generation jobs using injected embedding queue
         for (const chunkId of chunkIds) {
-          await embeddingQueue.add('embedding-generation', { chunkId });
+          await embeddingQueueRef.add('embedding-generation', { chunkId });
         }
 
         // Update document status to indexed
@@ -108,7 +102,7 @@ export class DocumentUploadWorker extends Worker {
     };
 
     super('document-upload', processor, {
-      connection: redisConn as any,
+      connection: redisRef as any,
       concurrency: 2,
     });
   }
