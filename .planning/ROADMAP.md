@@ -60,7 +60,7 @@
   - ✅ 01a: Test config (Jest, coverage, ts-jest)
   - ✅ 01b: Test fixtures (conftest, mocks, builders, samples)
   - ✅ 01c: Unit test scaffolds (20 spec files with describe/it stubs)
-  - ⏳ 01d: Integration test scaffolds (end-to-end)
+  - ✅ 01d: Integration test scaffolds (7 E2E test files + .env.example)
 - [ ] **01-backend-mvp-02-PLAN-02-infrastructure** - Set up PostgreSQL with RLS, Redis, Qdrant client, OpenAI embeddings; create Prisma schema and migrations (Wave 1)
 - [ ] **01-backend-mvp-03-PLAN-03-auth** - Implement JWT authentication with email verification, password reset, and tenant context middleware (Wave 2)
 - [ ] **01-backend-mvp-04-PLAN-04-documents** - Build document upload pipeline with BullMQ async workers, text extraction, semantic chunking, embedding generation (Wave 3)
@@ -133,7 +133,7 @@
 | Phase | Name | Requirements | Status | Plans Complete |
 |-------|------|--------------|--------|----------------|
 | 0 | Architecture & Foundation | 5 | Not started | 0/3 |
-| 1 | Backend MVP | 20 | In planning | 2/6 |
+| 1 | Backend MVP | 20 | In planning | 4/6 |
 | 2 | Desktop MVP | 13 | Not started | 0/6 |
 | 3 | Evaluation & Compliance | 2 | Not started | 0/5 |
 | 4 | Polish & Demo Preparation | 5 | Not started | 0/6 |

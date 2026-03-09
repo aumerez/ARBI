@@ -13,9 +13,9 @@ Requirements for initial MVP release. Each maps to roadmap phases.
 - [x] **AUTH-02**: User can log in with credentials and receive persistent session (JWT)
 - [x] **AUTH-03**: User can log out from any page (session invalidation)
 - [x] **AUTH-04**: User can reset password via email link
-- [ ] **TEN-01**: System enforces tenant isolation at database level (PostgreSQL RLS)
-- [ ] **TEN-02**: All data operations automatically filter by tenant context (metadata tenant_id)
-- [ ] **TEN-03**: Users can only access their own tenant's documents and chat history
+- [x] **TEN-01**: System enforces tenant isolation at database level (PostgreSQL RLS)
+- [x] **TEN-02**: All data operations automatically filter by tenant context (metadata tenant_id)
+- [x] **TEN-03**: Users can only access their own tenant's documents and chat history
 
 ### Tenant Branding
 
