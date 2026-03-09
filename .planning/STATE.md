@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 01-backend-mvp-04b-chunking-embedding.md
-last_updated: "2026-03-09T18:05:33.182Z"
+stopped_at: Completed 01-backend-mvp-04c-PLAN-04c-documents-service.md
+last_updated: "2026-03-09T18:27:30.794Z"
 last_activity: "2026-03-09 — Completed Plan 05a: Chat conversation management"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 0
-  completed_plans: 17
+  completed_plans: 18
   percent: 97
 ---
 
@@ -102,6 +102,8 @@ Recent decisions affecting current work:
 - [Plan 03c]: Password reset tokens plain UUID in MVP - simplified for development velocity, production needs hashing + selector pattern
 - [Plan 03c]: Generic "Invalid credentials" errors - prevents user enumeration attacks
 - [Plan 03c]: Logout uses bcrypt.compare loop - required due to salt randomness, acceptable for typical 1-2 tokens per user
+- [Phase 01-backend-mvp]: Use lowercase enum values (queued, processing, indexed, error) from Prisma DocumentStatus
+- [Phase 01-backend-mvp]: Follow project DTO pattern: Date fields without @IsDateString() decorator
 
 ### Pending Todos
 
@@ -113,6 +115,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-09T18:10:00.000Z
-Stopped at: Completed 01-backend-mvp-04b-chunking-embedding.md
+Last session: 2026-03-09T18:27:15.346Z
+Stopped at: Completed 01-backend-mvp-04c-PLAN-04c-documents-service.md
 Resume file: None
