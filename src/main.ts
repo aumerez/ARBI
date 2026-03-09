@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
+import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
 import helmet from 'helmet';
 
 async function bootstrap() {
@@ -20,6 +22,12 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Global exception filter
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  // Global interceptor for structured logging
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
