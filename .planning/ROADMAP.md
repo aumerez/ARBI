@@ -70,8 +70,18 @@
   - ✅ 02f: Provider implementations (OpenAI, Anthropic, Ollama) (Completed 2026-03-09)
   - ✅ 02g: AppModule wiring (Module imports, provider configuration, database initialization) (Completed 2026-03-09)
 - [ ] **01-backend-mvp-03-PLAN-03-auth** - Implement JWT authentication with email verification, password reset, and tenant context middleware (Wave 2)
-- [ ] **01-backend-mvp-04-PLAN-04-documents** - Build document upload pipeline with BullMQ async workers, text extraction, semantic chunking, embedding generation (Wave 3)
+- [x] **01-backend-mvp-04-PLAN-04-documents** - Build document upload pipeline with BullMQ async workers, text extraction, semantic chunking, embedding generation (Wave 3)
+  - ✅ 04a: Document processing workers and processors (Completed 2026-03-09)
+  - ✅ 04b: Semantic text chunking service (Completed 2026-03-09)
+  - ✅ 04c: Document status tracking and updates (Completed 2026-03-09)
+  - ✅ 04d: Document upload controller with tenant isolation (Completed 2026-03-09)
+  - ✅ 04e: Documents module and integration (Completed 2026-03-09)
 - [ ] **01-backend-mvp-05-PLAN-05-chat-rag** - Implement RAG engine: hybrid search with RRF, Claude streaming, citation validation, no-context guard (Wave 4)
+  - ✅ 05a: Chat conversation management with authentication (Completed 2026-03-09)
+  - [ ] 05b: Hybrid search with vector + BM25 (RRF fusion)
+  - [ ] 05c: Reranker for improved result ordering
+  - [ ] 05d: LLM generation with streaming and citations
+  - [ ] 05e: Citation validation and no-context guard
 - [ ] **01-backend-mvp-06-PLAN-06-crosscutting** - Add rate limiting, audit logging, encryption service, soft deletes, structured logging, error handling (Wave 5)
 
 ---

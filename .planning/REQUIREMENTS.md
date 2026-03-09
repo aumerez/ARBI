@@ -40,7 +40,7 @@ Requirements for initial MVP release. Each maps to roadmap phases.
 
 ### RAG Chat Interface (Core)
 
-- [x] **CHAT-01**: User can open chat interface with natural language text input
+- [x] **CHAT-01**: User can open chat interface with natural language text input (Completed Phase 1, Plan 05a - Chat conversation CRUD)
 - [x] **CHAT-02**: System retrieves relevant document chunks using hybrid search (semantic + BM25)
 - [x] **CHAT-03**: System generates responses using Claude API grounded in retrieved context (Completed Phase 1, Plan 02f - Claude/Local providers)
 - [x] **CHAT-04**: System includes inline citations ([1], [2]) linking to source documents
