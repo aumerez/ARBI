@@ -132,10 +132,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Mapped |
-| AUTH-02 | Phase 1 | Mapped |
-| AUTH-03 | Phase 1 | Mapped |
-| AUTH-04 | Phase 1 | Mapped |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
+| AUTH-03 | Phase 1 | Complete |
+| AUTH-04 | Phase 1 | Complete |
 | TEN-01 | Phase 0 | Mapped |
 | TEN-02 | Phase 0 | Mapped |
 | TEN-03 | Phase 0 | Mapped |

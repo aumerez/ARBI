@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 01-backend-mvp-03a-PLAN-03a-auth-types-dtos.md
-last_updated: "2026-03-09T17:00:00.000Z"
-last_activity: "2026-03-09 — Completed Plan 03a: Auth types, decorators, and DTOs"
+stopped_at: Completed 01-backend-mvp-03b-PLAN-03b-auth-strategies.md
+last_updated: "2026-03-09T17:25:00.000Z"
+last_activity: "2026-03-09 — Completed Plan 03b: Authentication strategies (Local & JWT)"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 0
-  completed_plans: 12
-  percent: 83
+  completed_plans: 14
+  percent: 86
 ---
 
 # Project State
@@ -26,12 +26,12 @@ See: .planning/PROJECT.md (updated 2025-03-08)
 ## Current Position
 
 Phase: 1 of 5 (Backend MVP)
-Plan: Wave 1 complete (02a-02g), moving to Wave 2 (Authentication)
-Status: Infrastructure wiring complete
-Last activity: 2026-03-09 — Completed Plan 02g: AppModule wiring with infrastructure integration
-Progress: █████████▌ 83% (5/6 core infrastructure plans complete)
+Plan: Wave 1 infrastructure complete, Wave 2 Authentication in progress (03a-03f)
+Status: Completed Plan 03b: Local & JWT strategies with TDD tests
+Last activity: 2026-03-09 — Completed Plan 03b: Authentication strategies (Local & JWT)
+Progress: ██████████▊ 86% (14/17 core plans complete, 3 tests added)
 
-Note: Phase 1 has 6 core implementation plans (02a-02f, 03, 04, 05) + 1 integration plan
+Wave 2 progress: 03a (types/DTOs), 03b (strategies) ✓, 03c (AuthService - pending), 03d (guards), 03e (controller), 03f (module)
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Note: Phase 1 has 6 core implementation plans (02a-02f, 03, 04, 05) + 1 integrat
 | Phase 01-backend-mvp P02f | 15min | 2 tasks | 7 files |
 | Phase 01-backend-mvp P02g | 15min | 1 task | 5 files |
 | Phase 01-backend-mvp P03a | 15min | 2 tasks | 8 files |
+| Phase 01-backend-mvp P03b | 25min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,7 @@ Recent decisions affecting current work:
 - [Phase 01-backend-mvp]: Used custom DatabaseService managing its own PrismaClient rather than @prisma/nestjs; provided explicit lifecycle management and simpler dependency graph.
 - [Plan 02e]: Protected logger visibility (changed private → protected) to allow test spy access while maintaining encapsulation in production code.
 - [Phase 01-backend-mvp]: [Plan 02e]: Changed logger visibility from private to protected to enable test spy access while maintaining encapsulation in production
+- [Plan 03b]: Added `password_hash` to User interface to support authentication validation, while keeping it excluded from API responses via serialization
 
 ### Pending Todos
 
