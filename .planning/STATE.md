@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 01-backend-mvp-03b-PLAN-03b-auth-strategies.md
+stopped_at: Completed 01-backend-mvp-03c-PLAN-03c-auth-service.md
 last_updated: "2026-03-09T17:25:00.000Z"
-last_activity: "2026-03-09 — Completed Plan 03b: Authentication strategies (Local & JWT)"
+last_activity: "2026-03-09 — Completed Plan 03c: AuthService with complete authentication logic"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 0
-  completed_plans: 14
-  percent: 86
+  completed_plans: 15
+  percent: 88
 ---
 
 # Project State
@@ -27,11 +27,11 @@ See: .planning/PROJECT.md (updated 2025-03-08)
 
 Phase: 1 of 5 (Backend MVP)
 Plan: Wave 1 infrastructure complete, Wave 2 Authentication in progress (03a-03f)
-Status: Completed Plan 03b: Local & JWT strategies with TDD tests
-Last activity: 2026-03-09 — Completed Plan 03b: Authentication strategies (Local & JWT)
-Progress: ██████████▊ 86% (14/17 core plans complete, 3 tests added)
+Status: Completed Plan 03c: AuthService with TDD tests (19/19 passing)
+Last activity: 2026-03-09 — Completed Plan 03c: AuthService with complete authentication logic
+Progress: ██████████▋ 88% (15/17 core plans complete, 22 tests added)
 
-Wave 2 progress: 03a (types/DTOs), 03b (strategies) ✓, 03c (AuthService - pending), 03d (guards), 03e (controller), 03f (module)
+Wave 2 progress: 03a (types/DTOs), 03b (strategies) ✓, 03c (AuthService) ✓, 03d (guards), 03e (controller), 03f (module)
 
 ## Performance Metrics
 
@@ -62,6 +62,8 @@ Wave 2 progress: 03a (types/DTOs), 03b (strategies) ✓, 03c (AuthService - pend
 | Phase 01-backend-mvp P02g | 15min | 1 task | 5 files |
 | Phase 01-backend-mvp P03a | 15min | 2 tasks | 8 files |
 | Phase 01-backend-mvp P03b | 25min | 2 tasks | 5 files |
+| Phase 01-backend-mvp P03c | 25min | 1 tasks | 2 files |
+| Phase 01-backend-mvp P03c | 25min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -82,6 +84,20 @@ Recent decisions affecting current work:
 - [Plan 02e]: Protected logger visibility (changed private → protected) to allow test spy access while maintaining encapsulation in production code.
 - [Phase 01-backend-mvp]: [Plan 02e]: Changed logger visibility from private to protected to enable test spy access while maintaining encapsulation in production
 - [Plan 03b]: Added `password_hash` to User interface to support authentication validation, while keeping it excluded from API responses via serialization
+- [Plan 03c]: Bcrypt with 12 salt rounds - NIST recommendation for password hashing (2024 guidelines)
+- [Plan 03c]: JWT access token 15min, refresh token 7d - balanced security/usability, industry standard session pattern
+- [Plan 03c]: Refresh tokens stored hashed (bcrypt) in DB - prevent token disclosure if DB compromised
+- [Plan 03c]: Password reset tokens plain UUID in MVP - simplified for development velocity, production needs hashing + selector pattern
+- [Plan 03c]: Generic "Invalid credentials" errors - prevents user enumeration attacks
+- [Plan 03c]: Logout uses bcrypt.compare loop - required due to salt randomness, acceptable for typical 1-2 tokens per user
+- [Plan 03c]: Downgraded bcrypt from v6 to v5.1.0 for test mocking compatibility (v6 ESM read-only properties incompatibility)
+- [Plan 03c]: Replaced uuid package with crypto.randomUUID - eliminated ESM dependency, simplified builds
+- [Plan 03c]: Bcrypt with 12 salt rounds - NIST recommendation for password hashing (2024 guidelines)
+- [Plan 03c]: JWT access token 15min, refresh token 7d - balanced security/usability, industry standard session pattern
+- [Plan 03c]: Refresh tokens stored hashed (bcrypt) in DB - prevent token disclosure if DB compromised
+- [Plan 03c]: Password reset tokens plain UUID in MVP - simplified for development velocity, production needs hashing + selector pattern
+- [Plan 03c]: Generic "Invalid credentials" errors - prevents user enumeration attacks
+- [Plan 03c]: Logout uses bcrypt.compare loop - required due to salt randomness, acceptable for typical 1-2 tokens per user
 
 ### Pending Todos
 
@@ -93,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-09T15:41:39.000Z
-Stopped at: Completed 01-backend-mvp-02b-PLAN.md
+Last session: 2026-03-09T17:25:00.000Z
+Stopped at: Completed 01-backend-mvp-03c-PLAN-03c-auth-service.md
 Resume file: None
