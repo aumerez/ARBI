@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 01-backend-mvp-05b-PLAN-05b-summary.md
-last_updated: "2026-03-09T18:51:37.849Z"
-last_activity: "2026-03-09 — Completed Plan 05b: Hybrid search with RRF fusion"
+status: in-progress
+stopped_at: Completed 01-backend-mvp-05c-PLAN-05c-reranker.md
+last_updated: "2026-03-09T19:40:00.000Z"
+last_activity: "2026-03-09 — Completed Plan 05c: Reranker service integrated"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 0
-  completed_plans: 20
+  completed_plans: 22
   percent: 100
 ---
 
@@ -27,12 +27,12 @@ See: .planning/PROJECT.md (updated 2025-03-08)
 
 Phase: 1 of 5 (Backend MVP)
 Plan: Wave 1 infrastructure complete, Wave 3 Document pipeline complete (04a-04f), Wave 13 Chat in progress (05a-05d)
-Status: Completed Plan 05b: Hybrid search with RRF fusion
-Last activity: 2026-03-09 — Completed Plan 04e: DocumentsModule and worker integration
-Progress: ██████████▉ 100% (20/20 core plans complete, 60+ tests added)
+Status: Completed Plan 05c: Reranker service integrated
+Last activity: 2026-03-09 — Completed Plan 05c: Reranker service integrated
+Progress: ██████████▉ 100% (22/22 core plans complete, 76+ tests added)
 
 Wave 3 progress: 04a (workers) ✓, 04b (chunking) ✓, 04c (status) ✓, 04d (upload) ✓, 04e (integration) ✓, 04f (testing)
-Wave 13 progress: 05a (conversations) ✓, 05b (hybrid search) ✓, 05c (reranker), 05d (LLM generation)
+Wave 13 progress: 05a (conversations) ✓, 05b (hybrid search) ✓, 05c (reranker) ✓, 05d (LLM generation)
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Wave 13 progress: 05a (conversations) ✓, 05b (hybrid search) ✓, 05c (reranke
 | Phase 01-backend-mvp P03c | 25min | 1 tasks | 2 files |
 | Phase 01-backend-mvp P04d | 15min | 1 tasks | 4 files |
 | Phase 01-backend-mvp P04e | 600 | 2 tasks | 4 files |
+| Phase 01-backend-mvp P05c | 15 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -114,6 +115,9 @@ Recent decisions affecting current work:
 - [Plan 05b]: RRF weights 0.7 semantic / 0.3 lexical, k=60 (industry standard for hybrid RAG)
 - [Plan 05b]: Use chunk_index as pageNumber in MVP (simplification, no extra storage)
 - [Plan 05b]: Parameterized raw SQL ($queryRawUnsafe) for BM25 security
+- [Phase 01-backend-mvp]: Use cosine similarity with existing embeddings instead of cross-encoder for MVP reranking
+- [Phase 01-backend-mvp]: Make reranking stateless and replaceable for future cross-encoder model
+- [Phase 01-backend-mvp]: Fetch missing embeddings from Qdrant via getPoints before reranking
 
 ### Pending Todos
 
@@ -125,6 +129,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-09T19:30:00Z
-Stopped at: Completed 01-backend-mvp-05b-PLAN-05b-summary.md
+Last session: 2026-03-09T19:37:52.979Z
+Stopped at: Completed 01-backend-mvp-05c-PLAN-05c-reranker.md
 Resume file: None
