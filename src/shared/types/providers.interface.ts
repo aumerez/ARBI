@@ -33,6 +33,7 @@ export interface RetrievedChunk {
   documentName: string;
   pageNumber?: number;
   score: number;
+  embedding?: number[];
 }
 
 export interface Citation {
