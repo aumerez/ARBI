@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 01-backend-mvp-05a-chat-conversation.md
-last_updated: "2026-03-09T17:59:52.269Z"
-last_activity: "2026-03-09 — Completed Plan 05a: Chat conversation CRUD with authentication guards"
+stopped_at: Completed 01-backend-mvp-04b-chunking-embedding.md
+last_updated: "2026-03-09T18:05:33.182Z"
+last_activity: "2026-03-09 — Completed Plan 05a: Chat conversation management"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 0
-  completed_plans: 16
-  percent: 94
+  completed_plans: 17
+  percent: 97
 ---
 
 # Project State
@@ -26,11 +26,12 @@ See: .planning/PROJECT.md (updated 2025-03-08)
 ## Current Position
 
 Phase: 1 of 5 (Backend MVP)
-Plan: Wave 1 infrastructure complete, Wave 3 Document pipeline complete, Wave 13 Chat in progress (05a-05d)
-Status: Completed Plan 05a: Chat conversation CRUD with authentication guards
+Plan: Wave 1 infrastructure complete, Wave 3 Document pipeline in progress (04a-04f), Wave 13 Chat in progress (05a-05d)
+Status: Completed Plan 04b: Semantic text chunking service with LangChain
 Last activity: 2026-03-09 — Completed Plan 05a: Chat conversation management
 Progress: ██████████▉ 97% (17/17 core plans complete, 40 tests added)
 
+Wave 3 progress: 04a (workers) ✓, 04b (chunking) ✓, 04c (status), 04d (upload), 04e (integration), 04f (testing)
 Wave 13 progress: 05a (conversations) ✓, 05b (hybrid search), 05c (reranker), 05d (LLM generation)
 
 ## Performance Metrics
@@ -73,6 +74,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - Phase 0: Multi-tenancy strategy chosen - PostgreSQL RLS (Row Level Security) with metadata tenant_id filtering; simpler infrastructure, cost-effective, database-enforced isolation
+- [Plan 04b]: Use RecursiveCharacterTextSplitter with separators ['\n\n', '\n', '. ', ' ', ''] for paragraph/sentence awareness
+- [Plan 04b]: Character-based chunk sizing (2000 chars/400 overlap) approximating 500 tokens for MVP simplicity
+- [Plan 04b]: Create both TextSplitterService (primary) and SemanticChunker (placeholder) to enable future embeddings-based semantic chunking
 - Phase 0: Stack decisions confirmed - NestJS backend, Qdrant vector DB, PostgreSQL relational DB, Claude for LLM, OpenAI embeddings, LangChain.js RAG, Electron desktop
 - Phase 0: Build order defined - Architecture first, then Backend MVP, Desktop MVP in parallel after API contracts, Evaluation/Compliance before launch, Polish/Demo final
 - [Phase 01-backend-mvp]: Use ts-jest preset instead of babel-jest for TypeScript tests - simpler integration with NestJS
@@ -109,6 +113,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-09T17:48:33.300Z
-Stopped at: Completed 01-backend-mvp-04a-documents-worker.md
+Last session: 2026-03-09T18:10:00.000Z
+Stopped at: Completed 01-backend-mvp-04b-chunking-embedding.md
 Resume file: None
