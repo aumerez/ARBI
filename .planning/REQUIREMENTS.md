@@ -33,7 +33,7 @@ Requirements for initial MVP release. Each maps to roadmap phases.
 - [x] **DOC-05**: User sees document status: Queued, Processing, Indexed, Error
 - [x] **DOC-06**: System extracts text content from documents using production-grade parsers
 - [x] **DOC-07**: System chunks documents with semantic awareness (respects sections, 500-1500 tokens)
-- [x] **DOC-08**: System generates embeddings for chunks and stores in vector database with tenant_id
+- [x] **DOC-08**: System generates embeddings for chunks and stores in vector database with tenant_id (Completed Phase 1, Plan 02e/02f - OpenAI/Local providers)
 - [ ] **DOC-09**: User can list all their tenant's documents with metadata (name, type, upload date, size, status)
 - [ ] **DOC-10**: User can delete documents (cascade cleanup from metadata DB and vector store)
 - [ ] **DOC-11**: System shows clear error messages for failed uploads/processing
@@ -42,7 +42,7 @@ Requirements for initial MVP release. Each maps to roadmap phases.
 
 - [x] **CHAT-01**: User can open chat interface with natural language text input
 - [x] **CHAT-02**: System retrieves relevant document chunks using hybrid search (semantic + BM25)
-- [x] **CHAT-03**: System generates responses using Claude API grounded in retrieved context
+- [x] **CHAT-03**: System generates responses using Claude API grounded in retrieved context (Completed Phase 1, Plan 02f - Claude/Local providers)
 - [x] **CHAT-04**: System includes inline citations ([1], [2]) linking to source documents
 - [ ] **CHAT-05**: User can click citations to view source document snippets with context
 - [ ] **CHAT-06**: System shows document name, page/section when available in citations
