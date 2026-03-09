@@ -116,56 +116,56 @@ CREATE TABLE IF NOT EXISTS "AuditLog" (
 
 -- User foreign keys
 ALTER TABLE "User"
-  ADD CONSTRAINT IF NOT EXISTS "User_tenant_id_fkey"
+  ADD CONSTRAINT "User_tenant_id_fkey"
   FOREIGN KEY ("tenant_id") REFERENCES "Tenant" ("id") ON DELETE CASCADE;
 
 -- Document foreign keys
 ALTER TABLE "Document"
-  ADD CONSTRAINT IF NOT EXISTS "Document_tenant_id_fkey"
+  ADD CONSTRAINT "Document_tenant_id_fkey"
   FOREIGN KEY ("tenant_id") REFERENCES "Tenant" ("id") ON DELETE CASCADE,
-  ADD CONSTRAINT IF NOT EXISTS "Document_user_id_fkey"
+  ADD CONSTRAINT "Document_user_id_fkey"
   FOREIGN KEY ("user_id") REFERENCES "User" ("id") ON DELETE CASCADE;
 
 -- DocumentChunk foreign keys
 ALTER TABLE "DocumentChunk"
-  ADD CONSTRAINT IF NOT EXISTS "DocumentChunk_tenant_id_fkey"
+  ADD CONSTRAINT "DocumentChunk_tenant_id_fkey"
   FOREIGN KEY ("tenant_id") REFERENCES "Tenant" ("id") ON DELETE CASCADE,
-  ADD CONSTRAINT IF NOT EXISTS "DocumentChunk_document_id_fkey"
+  ADD CONSTRAINT "DocumentChunk_document_id_fkey"
   FOREIGN KEY ("document_id") REFERENCES "Document" ("id") ON DELETE CASCADE;
 
 -- Chat foreign keys
 ALTER TABLE "Chat"
-  ADD CONSTRAINT IF NOT EXISTS "Chat_tenant_id_fkey"
+  ADD CONSTRAINT "Chat_tenant_id_fkey"
   FOREIGN KEY ("tenant_id") REFERENCES "Tenant" ("id") ON DELETE CASCADE,
-  ADD CONSTRAINT IF NOT EXISTS "Chat_user_id_fkey"
+  ADD CONSTRAINT "Chat_user_id_fkey"
   FOREIGN KEY ("user_id") REFERENCES "User" ("id") ON DELETE CASCADE;
 
 -- ChatMessage foreign keys
 ALTER TABLE "ChatMessage"
-  ADD CONSTRAINT IF NOT EXISTS "ChatMessage_tenant_id_fkey"
+  ADD CONSTRAINT "ChatMessage_tenant_id_fkey"
   FOREIGN KEY ("tenant_id") REFERENCES "Tenant" ("id") ON DELETE CASCADE,
-  ADD CONSTRAINT IF NOT EXISTS "ChatMessage_chat_id_fkey"
+  ADD CONSTRAINT "ChatMessage_chat_id_fkey"
   FOREIGN KEY ("chat_id") REFERENCES "Chat" ("id") ON DELETE CASCADE;
 
 -- RefreshToken foreign keys
 ALTER TABLE "RefreshToken"
-  ADD CONSTRAINT IF NOT EXISTS "RefreshToken_tenant_id_fkey"
+  ADD CONSTRAINT "RefreshToken_tenant_id_fkey"
   FOREIGN KEY ("tenant_id") REFERENCES "Tenant" ("id") ON DELETE CASCADE,
-  ADD CONSTRAINT IF NOT EXISTS "RefreshToken_user_id_fkey"
+  ADD CONSTRAINT "RefreshToken_user_id_fkey"
   FOREIGN KEY ("user_id") REFERENCES "User" ("id") ON DELETE CASCADE;
 
 -- PasswordResetToken foreign keys
 ALTER TABLE "PasswordResetToken"
-  ADD CONSTRAINT IF NOT EXISTS "PasswordResetToken_tenant_id_fkey"
+  ADD CONSTRAINT "PasswordResetToken_tenant_id_fkey"
   FOREIGN KEY ("tenant_id") REFERENCES "Tenant" ("id") ON DELETE CASCADE,
-  ADD CONSTRAINT IF NOT EXISTS "PasswordResetToken_user_id_fkey"
+  ADD CONSTRAINT "PasswordResetToken_user_id_fkey"
   FOREIGN KEY ("user_id") REFERENCES "User" ("id") ON DELETE CASCADE;
 
 -- AuditLog foreign keys
 ALTER TABLE "AuditLog"
-  ADD CONSTRAINT IF NOT EXISTS "AuditLog_tenant_id_fkey"
+  ADD CONSTRAINT "AuditLog_tenant_id_fkey"
   FOREIGN KEY ("tenant_id") REFERENCES "Tenant" ("id") ON DELETE CASCADE,
-  ADD CONSTRAINT IF NOT EXISTS "AuditLog_user_id_fkey"
+  ADD CONSTRAINT "AuditLog_user_id_fkey"
   FOREIGN KEY ("user_id") REFERENCES "User" ("id") ON DELETE SET NULL;
 
 -- ============================================
@@ -216,7 +216,14 @@ CREATE POLICY tenant_isolation_audit_logs ON "AuditLog"
 -- PHASE 5: Create application role and grant privileges
 -- ============================================
 
-CREATE ROLE IF NOT EXISTS app;
+-- Create role 'app' if it doesn't exist (PostgreSQL 14 compatible)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'app') THEN
+    CREATE ROLE app;
+  END IF;
+END
+$$;
 
 -- Grant full DML privileges on all tables to app role
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app;
