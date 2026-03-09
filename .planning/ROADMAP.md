@@ -65,7 +65,7 @@
   - ✅ 02a: Multi-tenancy schema with provider abstraction (Tenant model, DatabaseProvider interface, config validation)
   - ✅ 02b: RLS migration with tenant isolation policies (enabled on 8 tables, current_setting filter, cascade FKs)
   - ✅ 02c: Database service module (DatabaseService with tenant context management, global module)
-  - ⏳ 02d: Redis and Qdrant clients (BullMQ queue, vector store connection)
+  - ✅ 02d: Redis and Qdrant clients (BullMQ queue, vector store connection)
   - ⏳ 02e: Provider services base (embedding, LLM, reranker interfaces)
   - ⏳ 02f: Provider implementations (OpenAI, Anthropic, Ollama)
   - ⏳ 02g: AppModule wiring (Module imports, provider configuration, database initialization)
