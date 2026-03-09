@@ -155,7 +155,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DOC-10 | Phase 2 | Mapped |
 | DOC-11 | Phase 2 | Mapped |
 | CHAT-01 | Phase 1 | Mapped |
-| CHAT-02 | Phase 1 | Mapped |
+| CHAT-02 | Phase 1 | Complete |
 | CHAT-03 | Phase 1 | Mapped |
 | CHAT-04 | Phase 1 | Mapped |
 | CHAT-05 | Phase 2 | Mapped |
