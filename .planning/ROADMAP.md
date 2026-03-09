@@ -140,7 +140,7 @@
 | Phase | Name | Requirements | Status | Plans Complete |
 |-------|------|--------------|--------|----------------|
 | 0 | Architecture & Foundation | 5 | Not started | 0/3 |
-| 1 | Backend MVP | 20 | In progress | 3/6 |
+| 1 | Backend MVP | 20 | In progress | 4/6 |
 | 2 | Desktop MVP | 13 | Not started | 0/6 |
 | 3 | Evaluation & Compliance | 2 | Not started | 0/5 |
 | 4 | Polish & Demo Preparation | 5 | Not started | 0/6 |
