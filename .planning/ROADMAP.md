@@ -86,7 +86,7 @@
   - [x] 06a: Encryption service and audit tables (AES-256-GCM, RLS policy)
   - [ ] 06b: Audit logging integration
   - [ ] 06c: Rate limiting middleware
-  - [ ] 06d: Global middleware and interceptors
+  - [x] 06d: Global middleware and interceptors
   - [ ] 06e: Finalization and error handling polish
 
 ---
