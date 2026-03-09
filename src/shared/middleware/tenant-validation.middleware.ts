@@ -22,13 +22,10 @@ export class TenantValidationMiddleware implements NestMiddleware {
     // The JWT payload is attached to req.user by the authentication guard
     const user = req.user as { sub: number } | undefined;
 
+    // If no user context (public route), skip tenant validation and continue
     if (!user || !user.sub) {
-      this.logger.debug('No user context found in request');
-      res.status(404).json({
-        statusCode: 404,
-        message: 'Tenant not found',
-      });
-      return;
+      this.logger.debug('No user context - skipping tenant validation for public route');
+      return next();
     }
 
     const tenantId = user.sub;

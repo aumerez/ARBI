@@ -146,8 +146,8 @@ describe('TenantValidationMiddleware', () => {
       expect((req as any).tenant).toBe(mockTenant);
     });
 
-    it('should handle missing user in request (no JWT)', async () => {
-      // Arrange
+    it('should handle missing user in request (public route)', async () => {
+      // Arrange - public route without JWT
       const req = createMockRequest({
         user: undefined,
       });
@@ -159,13 +159,10 @@ describe('TenantValidationMiddleware', () => {
       // Act
       await middleware.use(req, res, next);
 
-      // Assert
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({
-        statusCode: 404,
-        message: 'Tenant not found',
-      });
-      expect(next).not.toHaveBeenCalled();
+      // Assert - public routes should pass through (next called, no 404)
+      expect(next).toHaveBeenCalled();
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
     });
   });
 });
