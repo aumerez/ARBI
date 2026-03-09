@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../shared/database/database.service';
+import { DatabaseService } from '../shared/database/database.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { ChatResponseDto } from './dto/chat-response.dto';
 import { Chat } from './types/chat.entity';
@@ -8,10 +8,11 @@ import { Chat } from './types/chat.entity';
 export class ChatService {
   private readonly logger = new Logger(ChatService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly database: DatabaseService) {}
 
   async createChat(userId: number, tenantId: number, dto: CreateChatDto): Promise<ChatResponseDto> {
-    const chat = await this.prisma.chat.create({
+    const prisma = this.database.getPrismaClient();
+    const chat = await prisma.chat.create({
       data: {
         user_id: userId,
         tenant_id: tenantId,
@@ -23,7 +24,8 @@ export class ChatService {
   }
 
   async listChats(userId: number, tenantId: number): Promise<ChatResponseDto[]> {
-    const chats = await this.prisma.chat.findMany({
+    const prisma = this.database.getPrismaClient();
+    const chats = await prisma.chat.findMany({
       where: { user_id: userId, tenant_id: tenantId },
       orderBy: { updated_at: 'desc' },
     });
@@ -31,7 +33,8 @@ export class ChatService {
   }
 
   async getChat(chatId: number, userId: number, tenantId: number): Promise<Chat> {
-    const chat = await this.prisma.chat.findFirst({
+    const prisma = this.database.getPrismaClient();
+    const chat = await prisma.chat.findFirst({
       where: { id: chatId, user_id: userId, tenant_id: tenantId },
     });
 
