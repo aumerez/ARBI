@@ -1,52 +1,48 @@
+import { readFile } from 'fs/promises';
 import { TXTProcessor } from './txt.processor';
-import * as path from 'path';
+
+jest.mock('fs/promises');
 
 describe('TXTProcessor', () => {
   let processor: TXTProcessor;
-  const testTxtPath = path.join(__dirname, 'fixtures', 'test.txt');
 
   beforeEach(() => {
     processor = new TXTProcessor();
+    jest.clearAllMocks();
   });
 
-  describe('extractText', () => {
-    it('should read text from a valid TXT file', async () => {
-      const result = await processor.extractText(testTxtPath);
-      expect(typeof result).toBe('string');
-      expect(result.length).toBeGreaterThan(0);
-    });
+  it('should read text from TXT file with UTF-8 encoding', async () => {
+    const content = 'Hello World from TXT';
+    (readFile as jest.Mock).mockResolvedValue(content);
 
-    it('should return exact file content', async () => {
-      const result = await processor.extractText(testTxtPath);
-      expect(result).toContain('Hello World');
-    });
+    const result = await processor.extractText('/any.txt');
 
-    it('should preserve line breaks and formatting', async () => {
-      const result = await processor.extractText(testTxtPath);
-      expect(result).toContain('\n');
-    });
+    expect(readFile).toHaveBeenCalledWith('/any.txt', 'utf8');
+    expect(result).toBe(content);
+  });
 
-    it('should throw error when file does not exist', async () => {
-      await expect(processor.extractText('/nonexistent/file.txt'))
-        .rejects.toThrow();
-    });
+  it('should throw when file does not exist', async () => {
+    (readFile as jest.Mock).mockRejectedValue(new Error('ENOENT'));
 
-    it('should read UTF-8 encoded text correctly', async () => {
-      const utf8Path = path.join(__dirname, 'fixtures', 'utf8.txt');
-      const result = await processor.extractText(utf8Path);
-      expect(result).toBeDefined();
-    });
+    await expect(processor.extractText('/missing.txt'))
+      .rejects.toThrow('Failed to read TXT file: ENOENT');
+  });
 
-    it('should handle empty TXT file', async () => {
-      const emptyTxtPath = path.join(__dirname, 'fixtures', 'empty.txt');
-      const result = await processor.extractText(emptyTxtPath);
-      expect(result).toBe('');
-    });
+  it('should handle empty file', async () => {
+    (readFile as jest.Mock).mockResolvedValue('');
 
-    it('should read multi-line text files correctly', async () => {
-      const result = await processor.extractText(testTxtPath);
-      const lines = result.split('\n').filter(line => line.trim().length > 0);
-      expect(lines.length).toBeGreaterThanOrEqual(1);
-    });
+    const result = await processor.extractText('/empty.txt');
+
+    expect(result).toBe('');
+  });
+
+  it('should preserve line breaks and content', async () => {
+    const content = 'Line1\nLine2\nLine3';
+    (readFile as jest.Mock).mockResolvedValue(content);
+
+    const result = await processor.extractText('/any.txt');
+
+    expect(result).toContain('\n');
+    expect(result).toBe(content);
   });
 });

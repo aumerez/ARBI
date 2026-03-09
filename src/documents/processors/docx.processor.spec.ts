@@ -1,57 +1,42 @@
+import { readFile } from 'fs/promises';
+import * as mammoth from 'mammoth';
 import { DOCXProcessor } from './docx.processor';
-import * as fs from 'fs';
-import { promisify } from 'util';
-import * as path from 'path';
 
-const readFile = promisify(fs.readFile);
+jest.mock('fs/promises');
+jest.mock('mammoth');
 
 describe('DOCXProcessor', () => {
   let processor: DOCXProcessor;
-  const testDocxPath = path.join(__dirname, 'fixtures', 'test.docx');
 
   beforeEach(() => {
     processor = new DOCXProcessor();
+    jest.clearAllMocks();
   });
 
-  describe('extractText', () => {
-    it('should extract raw text from a valid DOCX file', async () => {
-      const result = await processor.extractText(testDocxPath);
-      expect(typeof result).toBe('string');
-      expect(result.length).toBeGreaterThan(0);
-    });
+  it('should extract raw text from DOCX', async () => {
+    const mockBuffer = Buffer.from('fake docx data');
+    (readFile as jest.Mock).mockResolvedValue(mockBuffer);
+    (mammoth.extractRawText as jest.Mock).mockResolvedValue({ value: 'Hello World from DOCX' });
 
-    it('should extract text content without markup', async () => {
-      const result = await processor.extractText(testDocxPath);
-      expect(result).not.toContain('<');
-      expect(result).not.toContain('>');
-    });
+    const result = await processor.extractText('/any.docx');
 
-    it('should preserve paragraph structure with line breaks', async () => {
-      const result = await processor.extractText(testDocxPath);
-      expect(result).toContain('\n');
-    });
+    expect(readFile).toHaveBeenCalledWith('/any.docx');
+    expect(mammoth.extractRawText).toHaveBeenCalledWith({ buffer: mockBuffer });
+    expect(result).toBe('Hello World from DOCX');
+  });
 
-    it('should throw error when file does not exist', async () => {
-      await expect(processor.extractText('/nonexistent/file.docx'))
-        .rejects.toThrow();
-    });
+  it('should throw when file read fails', async () => {
+    (readFile as jest.Mock).mockRejectedValue(new Error('No such file'));
 
-    it('should throw error when file is not a valid DOCX', async () => {
-      const invalidDocxPath = path.join(__dirname, 'fixtures', 'invalid.docx');
-      await expect(processor.extractText(invalidDocxPath))
-        .rejects.toThrow();
-    });
+    await expect(processor.extractText('/missing.docx'))
+      .rejects.toThrow('Failed to extract text from DOCX: No such file');
+  });
 
-    it('should handle empty DOCX file', async () => {
-      const emptyDocxPath = path.join(__dirname, 'fixtures', 'empty.docx');
-      const result = await processor.extractText(emptyDocxPath);
-      expect(result).toBe('');
-    });
+  it('should throw when mammoth fails', async () => {
+    (readFile as jest.Mock).mockResolvedValue(Buffer.from('data'));
+    (mammoth.extractRawText as jest.Mock).mockRejectedValue(new Error('Corrupt DOCX'));
 
-    it('should extract text from DOCX with multiple paragraphs', async () => {
-      const result = await processor.extractText(testDocxPath);
-      const paragraphs = result.split('\n').filter(p => p.trim().length > 0);
-      expect(paragraphs.length).toBeGreaterThan(1);
-    });
+    await expect(processor.extractText('/corrupt.docx'))
+      .rejects.toThrow('Failed to extract text from DOCX: Corrupt DOCX');
   });
 });

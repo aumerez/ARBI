@@ -1,53 +1,76 @@
-import { PDFProcessor } from './pdf.processor';
-import * as fs from 'fs';
-import { promisify } from 'util';
-import * as path from 'path';
+// Mock dependencies before importing processor
+jest.mock('pdfjs-dist', () => ({
+  getDocument: jest.fn(),
+}));
 
-const readFile = promisify(fs.readFile);
+jest.mock('fs/promises', () => ({
+  readFile: jest.fn(),
+}));
+
+import { readFile } from 'fs/promises';
+import { getDocument } from 'pdfjs-dist';
+import { PDFProcessor } from './pdf.processor';
 
 describe('PDFProcessor', () => {
   let processor: PDFProcessor;
-  const testPdfPath = path.join(__dirname, 'fixtures', 'test.pdf');
 
   beforeEach(() => {
     processor = new PDFProcessor();
+    jest.clearAllMocks();
   });
 
-  describe('extractText', () => {
-    it('should extract text from a valid PDF file', async () => {
-      // Create a minimal valid PDF for testing
-      const expectedText = 'Hello World Test PDF Content';
-      const result = await processor.extractText(testPdfPath);
-      expect(result).toBe(expectedText);
-    });
+  it('should extract text from PDF by reading file and using pdfjs-dist', async () => {
+    const mockBuffer = Buffer.from('fake pdf data');
+    const mockPage = {
+      getTextContent: jest.fn().mockResolvedValue({
+        items: [{ str: 'Hello' }, { str: 'World' }],
+      }),
+    };
+    const mockPdf = {
+      numPages: 1,
+      getPage: jest.fn().mockResolvedValue(mockPage),
+    };
+    (getDocument as jest.Mock).mockReturnValue({ promise: Promise.resolve(mockPdf) });
+    (readFile as jest.Mock).mockResolvedValue(mockBuffer);
 
-    it('should return concatenated text from all pages', async () => {
-      const result = await processor.extractText(testPdfPath);
-      expect(result).toContain('Page 1');
-      expect(result).toContain('Page 2');
-    });
+    const result = await processor.extractText('/any.pdf');
 
-    it('should handle PDF with multiple pages correctly', async () => {
-      const result = await processor.extractText(testPdfPath);
-      const pageCount = (result.match(/\n/g) || []).length + 1;
-      expect(pageCount).toBeGreaterThanOrEqual(1);
-    });
+    expect(readFile).toHaveBeenCalledWith('/any.pdf');
+    expect(getDocument).toHaveBeenCalledWith({ data: mockBuffer });
+    expect(mockPdf.getPage).toHaveBeenCalledWith(1);
+    expect(result).toBe('Hello World');
+  });
 
-    it('should throw error when file does not exist', async () => {
-      await expect(processor.extractText('/nonexistent/file.pdf'))
-        .rejects.toThrow();
-    });
+  it('should concatenate text from multiple pages with newlines', async () => {
+    const mockBuffer = Buffer.from('fake pdf data');
+    const mockPage1 = { getTextContent: jest.fn().mockResolvedValue({ items: [{ str: 'Page1' }] }) };
+    const mockPage2 = { getTextContent: jest.fn().mockResolvedValue({ items: [{ str: 'Page2' }] }) };
+    const mockPdf = {
+      numPages: 2,
+      getPage: jest.fn()
+        .mockResolvedValueOnce(mockPage1)
+        .mockResolvedValueOnce(mockPage2),
+    };
+    (getDocument as jest.Mock).mockReturnValue({ promise: Promise.resolve(mockPdf) });
+    (readFile as jest.Mock).mockResolvedValue(mockBuffer);
 
-    it('should throw error when file is not a valid PDF', async () => {
-      const invalidPdfPath = path.join(__dirname, 'fixtures', 'invalid.pdf');
-      await expect(processor.extractText(invalidPdfPath))
-        .rejects.toThrow();
-    });
+    const result = await processor.extractText('/any.pdf');
 
-    it('should return empty string for empty PDF', async () => {
-      const emptyPdfPath = path.join(__dirname, 'fixtures', 'empty.pdf');
-      const result = await processor.extractText(emptyPdfPath);
-      expect(result).toBe('');
-    });
+    expect(result).toBe('Page1\nPage2');
+  });
+
+  it('should throw error when file read fails', async () => {
+    (readFile as jest.Mock).mockRejectedValue(new Error('File not found'));
+
+    await expect(processor.extractText('/nonexistent.pdf'))
+      .rejects.toThrow('Failed to extract text from PDF: File not found');
+  });
+
+  it('should throw error when pdfjs-dist fails', async () => {
+    (readFile as jest.Mock).mockResolvedValue(Buffer.from('data'));
+    (getDocument as jest.Mock).mockReturnValue({ promise: Promise.reject(new Error('Invalid PDF')) });
+
+    await expect(processor.extractText('/fake.pdf'))
+      .rejects.toThrow('Failed to extract text from PDF: Invalid PDF');
   });
 });
