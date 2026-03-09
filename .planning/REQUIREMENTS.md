@@ -132,51 +132,51 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| TEN-01 | Phase 0 | Pending |
-| TEN-02 | Phase 0 | Pending |
-| TEN-03 | Phase 0 | Pending |
-| TEN-04 | Phase 2 | Pending |
-| TEN-05 | Phase 2 | Pending |
-| TEN-06 | Phase 2 | Pending |
-| TEN-07 | Phase 2 | Pending |
-| DOC-01 | Phase 1 | Pending |
-| DOC-02 | Phase 1 | Pending |
-| DOC-03 | Phase 1 | Pending |
-| DOC-04 | Phase 1 | Pending |
-| DOC-05 | Phase 1 | Pending |
-| DOC-06 | Phase 1 | Pending |
-| DOC-07 | Phase 1 | Pending |
-| DOC-08 | Phase 1 | Pending |
-| DOC-09 | Phase 2 | Pending |
-| DOC-10 | Phase 2 | Pending |
-| DOC-11 | Phase 2 | Pending |
-| CHAT-01 | Phase 2 | Pending |
-| CHAT-02 | Phase 1 | Pending |
-| CHAT-03 | Phase 1 | Pending |
-| CHAT-04 | Phase 1 | Pending |
-| CHAT-05 | Phase 2 | Pending |
-| CHAT-06 | Phase 2 | Pending |
-| CHAT-07 | Phase 2 | Pending |
-| CHAT-08 | Phase 2 | Pending |
-| CHAT-09 | Phase 2 | Pending |
-| CHAT-10 | Phase 2 | Pending |
-| CHAT-11 | Phase 1 | Pending |
-| CHAT-12 | Phase 1 | Pending |
-| CHAT-13 | Phase 2 | Pending |
-| DEMO-01 | Phase 4 | Pending |
-| DEMO-02 | Phase 4 | Pending |
-| DEMO-03 | Phase 4 | Pending |
-| DEMO-04 | Phase 4 | Pending |
-| DEMO-05 | Phase 4 | Pending |
-| QUAL-01 | Phase 3 | Pending |
-| QUAL-02 | Phase 3 | Pending |
-| QUAL-03 | Phase 1 | Pending |
-| QUAL-04 | Phase 0 | Pending |
-| QUAL-05 | Phase 0 | Pending |
+| AUTH-01 | Phase 1 | Mapped |
+| AUTH-02 | Phase 1 | Mapped |
+| AUTH-03 | Phase 1 | Mapped |
+| AUTH-04 | Phase 1 | Mapped |
+| TEN-01 | Phase 0 | Mapped |
+| TEN-02 | Phase 0 | Mapped |
+| TEN-03 | Phase 0 | Mapped |
+| TEN-04 | Phase 2 | Mapped |
+| TEN-05 | Phase 2 | Mapped |
+| TEN-06 | Phase 2 | Mapped |
+| TEN-07 | Phase 2 | Mapped |
+| DOC-01 | Phase 1 | Mapped |
+| DOC-02 | Phase 1 | Mapped |
+| DOC-03 | Phase 1 | Mapped |
+| DOC-04 | Phase 1 | Mapped |
+| DOC-05 | Phase 1 | Mapped |
+| DOC-06 | Phase 1 | Mapped |
+| DOC-07 | Phase 1 | Mapped |
+| DOC-08 | Phase 1 | Mapped |
+| DOC-09 | Phase 2 | Mapped |
+| DOC-10 | Phase 2 | Mapped |
+| DOC-11 | Phase 2 | Mapped |
+| CHAT-01 | Phase 1 | Mapped |
+| CHAT-02 | Phase 1 | Mapped |
+| CHAT-03 | Phase 1 | Mapped |
+| CHAT-04 | Phase 1 | Mapped |
+| CHAT-05 | Phase 2 | Mapped |
+| CHAT-06 | Phase 2 | Mapped |
+| CHAT-07 | Phase 2 | Mapped |
+| CHAT-08 | Phase 2 | Mapped |
+| CHAT-09 | Phase 2 | Mapped |
+| CHAT-10 | Phase 1 | Mapped |
+| CHAT-11 | Phase 1 | Mapped |
+| CHAT-12 | Phase 1 | Mapped |
+| CHAT-13 | Phase 2 | Mapped |
+| DEMO-01 | Phase 4 | Mapped |
+| DEMO-02 | Phase 4 | Mapped |
+| DEMO-03 | Phase 4 | Mapped |
+| DEMO-04 | Phase 4 | Mapped |
+| DEMO-05 | Phase 4 | Mapped |
+| QUAL-01 | Phase 3 | Mapped |
+| QUAL-02 | Phase 3 | Mapped |
+| QUAL-03 | Phase 1 | Mapped |
+| QUAL-04 | Phase 0 | Mapped |
+| QUAL-05 | Phase 0 | Mapped |
 
 **Coverage:**
 - v1 requirements: 40 total
@@ -186,4 +186,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 ---
 
 *Requirements defined: 2025-03-08*
-*Last updated: 2025-03-08 after initialization*
+*Last updated: 2025-03-08 after roadmap creation*
