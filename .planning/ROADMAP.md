@@ -64,7 +64,7 @@
 - [x] **01-backend-mvp-02-PLAN-02-infrastructure** - Set up PostgreSQL with RLS, Redis, Qdrant client, OpenAI embeddings; create Prisma schema and migrations (Wave 1)
   - ✅ 02a: Multi-tenancy schema with provider abstraction (Tenant model, DatabaseProvider interface, config validation)
   - ✅ 02b: RLS migration with tenant isolation policies (enabled on 8 tables, current_setting filter, cascade FKs)
-  - ⏳ 02c: Database service module (PrismaService with tenant context middleware)
+  - ✅ 02c: Database service module (DatabaseService with tenant context management, global module)
   - ⏳ 02d: Redis and Qdrant clients (BullMQ queue, vector store connection)
   - ⏳ 02e: Provider services base (embedding, LLM, reranker interfaces)
   - ⏳ 02f: Provider implementations (OpenAI, Anthropic, Ollama)
@@ -140,7 +140,7 @@
 | Phase | Name | Requirements | Status | Plans Complete |
 |-------|------|--------------|--------|----------------|
 | 0 | Architecture & Foundation | 5 | Not started | 0/3 |
-| 1 | Backend MVP | 20 | In planning | 4/6 |
+| 1 | Backend MVP | 20 | In planning | 5/6 |
 | 2 | Desktop MVP | 13 | Not started | 0/6 |
 | 3 | Evaluation & Compliance | 2 | Not started | 0/5 |
 | 4 | Polish & Demo Preparation | 5 | Not started | 0/6 |
