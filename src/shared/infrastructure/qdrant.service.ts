@@ -152,6 +152,20 @@ export class QdrantService {
     }
   }
 
+  async upsertPoint(tenantId: number, pointId: number | string, vector: number[], payload: any): Promise<void> {
+    const collectionName = this.collectionName(tenantId);
+    try {
+      await this.client.upsert(collectionName, {
+        points: [{ id: pointId, vector, payload }],
+        wait: true,
+      });
+      this.logger.debug(`Upserted point ${pointId} to ${collectionName}`);
+    } catch (error) {
+      this.logger.error(`Failed to upsert point ${pointId} to ${collectionName}`, error);
+      throw error;
+    }
+  }
+
   private collectionName(tenantId: number): string {
     return `${this.collectionPrefix}${tenantId}`;
   }
