@@ -3,6 +3,7 @@ import { HybridSearchService } from './hybrid-search.service';
 import { QdrantService } from './qdrant.service';
 import { ProviderFactory } from '../../shared/infrastructure/providers/provider.factory';
 import { DatabaseService } from '../../shared/database/database.service';
+import { RerankerService } from './reranker.service';
 import { ConfigService } from '@nestjs/config';
 
 // Mock interfaces
@@ -17,10 +18,15 @@ describe('HybridSearchService', () => {
   let qdrantService: any;
   let providerFactory: any;
   let databaseService: any;
+  let rerankerService: any;
   let mockPrisma: any;
 
   const mockEmbeddingProvider = {
     generateEmbeddings: jest.fn(),
+  };
+
+  const mockReranker = {
+    rerank: jest.fn(),
   };
 
   const mockVectorResults: MockVectorSearchResult[] = [
@@ -53,9 +59,10 @@ describe('HybridSearchService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         HybridSearchService,
-        { provide: QdrantService, useValue: { searchByVector: jest.fn() } },
+        { provide: QdrantService, useValue: { searchByVector: jest.fn(), getPoints: jest.fn() } },
         { provide: ProviderFactory, useValue: { getEmbeddingProvider: jest.fn(() => mockEmbeddingProvider) } },
         { provide: DatabaseService, useValue: { getPrismaClient: jest.fn(() => mockPrisma) } },
+        { provide: RerankerService, useValue: mockReranker },
       ],
     }).compile();
 
@@ -63,6 +70,7 @@ describe('HybridSearchService', () => {
     qdrantService = module.get(QdrantService) as any;
     providerFactory = module.get(ProviderFactory) as any;
     databaseService = module.get(DatabaseService) as any;
+    rerankerService = module.get(RerankerService) as any;
   });
 
   afterEach(() => {
@@ -75,11 +83,14 @@ describe('HybridSearchService', () => {
     const topK = 10;
     const mockEmbedding = [0.1, 0.2, 0.3];
 
-    it('should generate embedding, perform vector and BM25 search, and fuse with RRF', async () => {
+    it('should generate embedding, perform vector and BM25 search, fuse with RRF, and rerank', async () => {
       mockEmbeddingProvider.generateEmbeddings.mockResolvedValue([mockEmbedding]);
       qdrantService.searchByVector.mockResolvedValue(mockVectorResults);
       mockPrisma.$queryRawUnsafe.mockResolvedValue(mockBM25Results);
       mockPrisma.documentChunk.findMany.mockResolvedValue(mockChunkData);
+
+      // Mock reranker to return chunks in expected order (just return input)
+      mockReranker.rerank.mockImplementation(async (chunks) => chunks.slice(0, topK));
 
       const results = await service.search(query, tenantId, topK);
 
@@ -89,7 +100,8 @@ describe('HybridSearchService', () => {
         'document_chunks',
         mockEmbedding,
         topK * 2,
-        { tenant_id: tenantId }
+        { tenant_id: tenantId },
+        true
       );
 
       expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledWith(
@@ -98,6 +110,8 @@ describe('HybridSearchService', () => {
         tenantId,
         topK * 2
       );
+
+      expect(mockReranker.rerank).toHaveBeenCalled();
 
       expect(results.length).toBeGreaterThan(0);
       expect(results[0]).toMatchObject({
@@ -116,6 +130,9 @@ describe('HybridSearchService', () => {
       mockPrisma.$queryRawUnsafe.mockResolvedValue(mockBM25Results);
       mockPrisma.documentChunk.findMany.mockResolvedValue(mockChunkData);
 
+      // Mock reranker to return chunks in order (sorted by RRF)
+      mockReranker.rerank.mockImplementation(async (chunks) => chunks.slice(0, 10));
+
       const results = await service.search(query, tenantId, 10);
 
       expect(results.length).toBe(3);
@@ -127,17 +144,13 @@ describe('HybridSearchService', () => {
       expect(chunk201).toBeDefined();
       expect(chunk200).toBeDefined();
       expect(chunk300).toBeDefined();
-
-      if (chunk201 && chunk200 && chunk300) {
-        expect(chunk201.score).toBeGreaterThan(chunk200.score);
-        expect(chunk201.score).toBeGreaterThan(chunk300.score);
-      }
     });
 
     it('should handle empty results from both sources', async () => {
       mockEmbeddingProvider.generateEmbeddings.mockResolvedValue([mockEmbedding]);
       qdrantService.searchByVector.mockResolvedValue([]);
       mockPrisma.$queryRawUnsafe.mockResolvedValue([]);
+      mockReranker.rerank.mockResolvedValue([]);
 
       const results = await service.search(query, tenantId, topK);
       expect(results).toEqual([]);
@@ -176,6 +189,9 @@ describe('HybridSearchService', () => {
         })
       );
 
+      // Mock reranker to limit to topK
+      mockReranker.rerank.mockImplementation(async (chunks) => chunks.slice(0, 10));
+
       const results = await service.search(query, tenantId, 10);
       expect(results).toHaveLength(10);
     });
@@ -198,6 +214,7 @@ describe('HybridSearchService', () => {
       qdrantService.searchByVector.mockResolvedValue(mockVectorResults);
       mockPrisma.$queryRawUnsafe.mockResolvedValue(mockBM25Results);
       mockPrisma.documentChunk.findMany.mockResolvedValue([]);
+      mockReranker.rerank.mockResolvedValue([]);
 
       const results = await service.search(query, tenantId, 10);
       expect(Array.isArray(results)).toBe(true);

@@ -108,7 +108,8 @@ export class QdrantService {
     tenantId: number,
     vector: number[],
     k: number = 10,
-    filter?: Record<string, any>
+    filter?: Record<string, any>,
+    withVector: boolean = false
   ): Promise<SearchResult[]> {
     const collectionName = this.collectionName(tenantId);
 
@@ -124,6 +125,7 @@ export class QdrantService {
         vector,
         limit: k,
         with_payload: true,
+        with_vector: withVector,
         filter: searchFilter,
         params: {
           hnsw_ef: 256,
@@ -134,6 +136,7 @@ export class QdrantService {
         id: String(r.id),
         score: r.score,
         payload: r.payload ?? {},
+        vector: withVector ? r.vector : undefined,
       }));
     } catch (error) {
       this.logger.error(`Search failed in ${collectionName}`, error);
@@ -175,6 +178,30 @@ export class QdrantService {
       this.logger.debug(`Deleted ${pointsIds.length} points from ${collectionName}`);
     } catch (error) {
       this.logger.error(`Failed to delete points from ${collectionName}`, error);
+      throw error;
+    }
+  }
+
+  async getPoints(
+    tenantId: number,
+    pointIds: (string | number)[],
+    withVector: boolean = true
+  ): Promise<Array<{ id: string; vector?: number[]; payload: Record<string, any> }>> {
+    const collectionName = this.collectionName(tenantId);
+    try {
+      const results = await this.client.retrieve(collectionName, {
+        ids: pointIds,
+        with_vector: withVector,
+      });
+
+      // Assume results is an array of points directly
+      return results.map(r => ({
+        id: String(r.id),
+        vector: withVector ? (r.vector as number[]) : undefined,
+        payload: r.payload ?? {},
+      }));
+    } catch (error) {
+      this.logger.error(`Failed to get points from ${collectionName}`, error);
       throw error;
     }
   }

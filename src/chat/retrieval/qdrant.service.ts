@@ -5,6 +5,7 @@ export interface SearchResult {
   id: string;
   score: number;
   payload: Record<string, any>;
+  vector?: number[];
 }
 
 @Injectable()
@@ -29,16 +30,18 @@ export class QdrantService {
     collection: string,
     vector: number[],
     limit: number = 10,
-    filters: { tenant_id: number } & Record<string, any>
+    filters: { tenant_id: number } & Record<string, any>,
+    withVector: boolean = false
   ): Promise<SearchResult[]> {
     try {
       // Use the shared QdrantService's search method
-      // Note: SharedQdrantService.search(tenantId, vector, limit, filter)
+      // Note: SharedQdrantService.search(tenantId, vector, limit, filter, withVector)
       const results = await this.sharedQdrantService.search(
         filters.tenant_id,
         vector,
         limit,
-        filters
+        filters,
+        withVector
       );
 
       this.logger.debug(`Vector search returned ${results.length} results`);
@@ -47,5 +50,12 @@ export class QdrantService {
       this.logger.error(`Vector search failed for tenant ${filters.tenant_id}`, error);
       throw error;
     }
+  }
+
+  async getPoints(
+    tenantId: number,
+    pointIds: (string | number)[]
+  ): Promise<Array<{ id: string; vector?: number[]; payload: Record<string, any> }>> {
+    return this.sharedQdrantService.getPoints(tenantId, pointIds, true);
   }
 }
