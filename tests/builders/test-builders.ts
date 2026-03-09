@@ -1,24 +1,12 @@
-import { beforeAll, afterAll } from '@jest/globals';
-import { MockRedisService } from './mocks/redis.service';
-import { MockPostgresService } from './mocks/postgres.service';
-import { MockQdrantService } from './mocks/qdrant.service';
-
-// Global test fixtures - this file executed before all test suites
-beforeAll(() => {
-  console.log('Test suite starting...');
-});
-
-afterAll(() => {
-  console.log('Test suite completed.');
-});
-
-// ============================================================================
-// TEST DATA BUILDERS
-// ============================================================================
-
 /**
- * Builder pattern for creating test User objects
+ * Test Data Builders
+ * Builder pattern for creating consistent test objects
  */
+
+// ============================================================================
+// USER BUILDER
+// ============================================================================
+
 export class UserBuilder {
   private data: any = {
     id: 1,
@@ -60,9 +48,10 @@ export class UserBuilder {
   }
 }
 
-/**
- * Builder pattern for creating test Document objects
- */
+// ============================================================================
+// DOCUMENT BUILDER
+// ============================================================================
+
 export class DocumentBuilder {
   private data: any = {
     id: 1,
@@ -118,9 +107,10 @@ export class DocumentBuilder {
   }
 }
 
-/**
- * Builder pattern for creating test Chunk objects
- */
+// ============================================================================
+// CHUNK BUILDER
+// ============================================================================
+
 export class ChunkBuilder {
   private data: any = {
     id: '1:0',
@@ -165,92 +155,5 @@ export class ChunkBuilder {
 
   build(): any {
     return { ...this.data };
-  }
-}
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Create a mock JWT payload for testing authenticated requests
- */
-export function mockJwtPayload(
-  userId: number = 1,
-  tenantId: number = 1,
-  email: string = 'test@example.com'
-): any {
-  return {
-    sub: userId.toString(),
-    tenant_id: tenantId,
-    email: email,
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiry
-  };
-}
-
-/**
- * Create a mock uploaded file for testing file upload endpoints
- * eslint-disable-next-line @typescript-eslint/no-explicit-any
- */
-export function mockUploadFile(
-  buffer: Buffer,
-  mimetype: string,
-  filename: string = 'test_file.pdf'
-): any {
-  return {
-    fieldname: 'file',
-    originalname: filename,
-    encoding: '7bit',
-    mimetype: mimetype,
-    buffer: buffer,
-    size: buffer.length,
-    stream: null,
-    destination: '',
-    filename: '',
-    path: '',
-  };
-}
-
-// ============================================================================
-// SINGLETON INSTANCES FOR SHARED TEST STATE
-// ============================================================================
-
-export const mockPostgres = new MockPostgresService();
-export const mockRedis = new MockRedisService();
-export const mockQdrant = new MockQdrantService();
-
-// ============================================================================
-// TEST SETUP HELPERS
-// ============================================================================
-
-/**
- * Initialize all mocks with test data
- */
-export async function initializeTestEnvironment(): Promise<void> {
-  await mockRedis.connect();
-  await mockQdrant.ensureCollection(1);
-  console.log('Test environment initialized');
-}
-
-/**
- * Cleanup test environment
- */
-export async function cleanupTestEnvironment(): Promise<void> {
-  await mockRedis.disconnect();
-  await mockQdrant.clearCollection(1);
-  mockPostgres.clearTenantContext();
-  console.log('Test environment cleaned up');
-}
-
-/**
- * Set up tenant context for a test
- */
-export function withTenantContext(tenantId: number, callback: () => void | Promise<void>): void | Promise<void> {
-  mockPostgres.setTenantContext(tenantId);
-  try {
-    return callback();
-  } finally {
-    mockPostgres.clearTenantContext();
   }
 }
