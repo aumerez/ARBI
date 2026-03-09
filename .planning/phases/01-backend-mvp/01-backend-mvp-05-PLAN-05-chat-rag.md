@@ -6,6 +6,7 @@ wave: 4
 depends_on:
   - 02
   - 03
+  - 04
 files_modified:
   - src/chat/chat.module.ts
   - src/chat/chat.controller.ts
@@ -86,6 +87,10 @@ must_haves:
       to: "hybrid-search.service.ts"
       via: "search score threshold check"
       pattern: "search.*score"
+    - from: "src/auth/auth.module.ts"
+      to: "src/auth/middleware/tenant-context.middleware.ts"
+      via: "APP_MIDDLEWARE provider"
+      pattern: "APP_MIDDLEWARE"
 
 ---
 
@@ -401,7 +406,7 @@ Output: Chat endpoints (create conversation, send message, list conversations, s
 
     Controller → ChatService.sendMessage(query):
        1. retrieval = await hybridSearch.search(query)
-       2. if (!shouldAnswer(retrieval)) return refusal
+       2. if (!shouldAnswer(retrieval)) return refusal response
        3. confidence = computeConfidence(retrieval)
        4. response = await claudeClient.streamChat(...)
        5. validate citations
@@ -764,8 +769,10 @@ Output: Chat endpoints (create conversation, send message, list conversations, s
         DocumentsModule,
         ChatModule, // ← Add
       ],
-      // ...
+      controllers: [AppController],
+      providers: [],
     })
+    export class AppModule {}
     ```
 
     Verify: All modules imported in dependency order (Auth → Documents → Chat). No circular imports.
@@ -861,7 +868,7 @@ Wave 4 - RAG Chat Engine Complete
 - QUAL-03: Citation validation post-generation
 
 **Critical checks:**
-- Tenant isolation: All Qdrant searches filter by tenant_id; Chat queries filter by tenant_id (RLS)
+- Tenant isolation: All Qdrant queries filter by tenant_id; Chat queries filter by tenant_id (RLS)
 - RRF algorithm: K=60 constant, reciprocal rank fusion
 - BM25 query parameters: Verify exact Qdrant client syntax (`query: string, vector: null, params: { query_mode: 'fulltext' }` or similar)
 - Streaming SSE format: Each event ends with double newline \n\n; content-type text/event-stream

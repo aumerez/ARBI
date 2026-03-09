@@ -3,7 +3,8 @@ phase: 01-backend-mvp
 plan: 02
 type: execute
 wave: 1
-depends_on: []
+depends_on:
+  - 01
 files_modified:
   - src/shared/database/database.module.ts
   - src/shared/database/database.service.ts
@@ -14,12 +15,7 @@ files_modified:
   - prisma/schema.prisma
   - src/app/app.module.ts
 autonomous: true
-requirements:
-  - TEN-01
-  - TEN-02
-  - TEN-03
-  - QUAL-04
-  - QUAL-05
+requirements: []
 user_setup: []
 must_haves:
   truths:
@@ -363,7 +359,7 @@ Output: Working database connection, RLS policies, Redis service, Qdrant client,
 </tasks>
 
 <verification>
-Wave 1 completes infrastructure foundation. Verification flow:
+Wave 2 completes infrastructure foundation. Verification flow:
 
 1. **Database readiness**: `npx prisma db push` connects to DATABASE_URL and applies schema; executes RLS policies; verify no errors
 2. **RLS enforcement**: Integration test `tests/integration/rls.integration.spec.ts` (created in Plan 01) confirms policies active - verify manually with `psql` query: `SELECT relrowsecurity FROM pg_class WHERE relname = 'users'` returns true

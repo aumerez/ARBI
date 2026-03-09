@@ -69,6 +69,10 @@ must_haves:
       to: "AuthService"
       via: "constructor(private authService: AuthService)"
       pattern: "constructor.*AuthService"
+    - from: "src/auth/auth.module.ts"
+      to: "src/shared/database/database.service.ts"
+      via: "DatabaseModule import dependency"
+      pattern: "DatabaseModule"
 
 ---
 
@@ -84,7 +88,7 @@ Output: Working auth endpoints: POST /auth/register, POST /auth/login, POST /aut
 <execution_context>
 @/Users/franciscoegloff/.claude/get-shit-done/workflows/execute-plan.md
 @/Users/franciscoegloff/.claude/get-shit-done/templates/summary.md
-</context>
+</execution_context>
 
 <context>
 @.planning/PROJECT.md
@@ -303,7 +307,7 @@ Define types early for executor:
 
 <task type="auto" tdd="true">
   <name>Task 5: Create TenantContextMiddleware and JWT guard</name>
-<files>
+  <files>
     src/auth/middleware/tenant-context.middleware.ts
     src/auth/guards/jwt-auth.guard.ts
     src/auth/guards/tenant-context.guard.ts
@@ -512,7 +516,7 @@ Define types early for executor:
 </tasks>
 
 <verification>
-**Wave 2 - Authentication Complete**
+**Wave 3 - Authentication Complete**
 
 **Automated verification sequence:**
 1. Compile TypeScript: `npm run build` succeeds (no type errors across auth module)

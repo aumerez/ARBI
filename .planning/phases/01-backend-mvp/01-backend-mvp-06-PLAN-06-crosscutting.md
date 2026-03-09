@@ -6,6 +6,8 @@ wave: 5
 depends_on:
   - 02
   - 03
+  - 04
+  - 05
 files_modified:
   - src/shared/infrastructure/logging.service.ts
   - src/shared/infrastructure/encryption.service.ts
@@ -14,12 +16,13 @@ files_modified:
   - src/shared/middleware/tenant-validation.middleware.ts
   - src/shared/interceptors/logging.interceptor.ts
   - src/shared/filters/http-exception.filter.ts
+  - src/shared/services/rate-limiter.service.ts
+  - src/shared/guards/rate-limit.guard.ts
   - prisma/migrations/002-add-audit-tables.sql
+  - src/main.ts
+  - src/app/app.module.ts
 autonomous: true
-requirements:
-  - QUAL-03
-  - QUAL-04
-  - QUAL-05
+requirements: []
 user_setup: []
 must_haves:
   truths:
@@ -28,7 +31,6 @@ must_haves:
     - "Sensitive data (API keys, JWT secrets) encrypted at rest"
     - "System provides structured logging with request context"
     - "System applies tenant validation guard to all protected endpoints"
-    - "System implements document versioning (immutable upload history, soft deletes)"
     - "HTTP exceptions are transformed into user-friendly error responses"
   artifacts:
     - path: "src/shared/infrastructure/encryption.service.ts"
@@ -37,18 +39,22 @@ must_haves:
         - "encrypt(plaintext: string): Promise<string>"
         - "decrypt(ciphertext: string): Promise<string>"
         - "key derivation from ENCRYPTION_KEY env var"
-    - path: "src/shared/middleware/rate-limit.middleware.ts"
-      provides: "Rate limiting middleware with Redis sliding window per user"
+    - path: "src/shared/services/rate-limiter.service.ts"
+      provides: "Rate limiting service using rate-limiter-flexible with Redis"
       features:
         - "Tracks requests by user_id from JWT"
         - "Window: 60s, max: 60 requests (configurable)"
         - "Returns 429 with Retry-After header when exceeded"
+    - path: "src/shared/guards/rate-limit.guard.ts"
+      provides: "Guard enforcing rate limits on protected routes"
     - path: "src/shared/middleware/audit.middleware.ts"
       provides: "Audit logging middleware capturing query/response details"
       logs:
         - "tenant_id, user_id, endpoint, method, status, duration"
         - "For chat: query, retrieved chunks, response length"
         - "For document upload: file metadata, status"
+    - path: "src/shared/middleware/tenant-validation.middleware.ts"
+      provides: "Middleware validating tenant membership (optional if RLS sufficient)"
     - path: "src/shared/interceptors/logging.interceptor.ts"
       provides: "Logging interceptor for structured logs (Winston)"
     - path: "src/shared/filters/http-exception.filter.ts"
@@ -57,10 +63,8 @@ must_haves:
       provides: "SQL migration adding audit_log table with tenant partitioning"
       contains:
         - "model AuditLog { id, tenant_id, user_id, event_type, payload, created_at }"
-    - path: "src/shared/middleware/tenant-validation.middleware.ts"
-      provides: "Middleware validating tenant membership (optional if RLS sufficient)"
   key_links:
-    - from: "src/shared/middleware/rate-limit.middleware.ts"
+    - from: "src/shared/services/rate-limiter.service.ts"
       to: "src/shared/infrastructure/redis.service.ts"
       via: "Redis connection for sliding window counters"
       pattern: "getConnection()"
@@ -76,6 +80,14 @@ must_haves:
       to: "prisma/schema.prisma"
       via: "model AuditLog"
       pattern: "model AuditLog"
+    - from: "src/shared/guards/rate-limit.guard.ts"
+      to: "Protected controllers"
+      via: "@UseGuards(RateLimitGuard)"
+      pattern: "RateLimitGuard"
+    - from: "src/app/app.module.ts"
+      to: "All feature modules"
+      via: "module imports and global middleware"
+      pattern: "useGlobalInterceptors"
 
 ---
 
@@ -84,7 +96,7 @@ Implement cross-cutting concerns: rate limiting, audit logging, encryption, and 
 
 Purpose: Ensure system quality, security, and compliance: prevent abuse with rate limiting; track all actions with audit log; protect sensitive data with encryption; provide structured logging and user-friendly errors.
 
-Output: Rate limiting middleware, audit logging, encryption service, global exception filter, and database audit tables
+Output: Rate limiting guard, audit logging, encryption service, global exception filter, and database audit tables
 
 </objective>
 
@@ -117,7 +129,7 @@ Output: Rate limiting middleware, audit logging, encryption service, global exce
 5. Apply globally via app.module
 
 # Notes:
-- QUAL-02 (document versioning) is listed in Phase 3, not this wave - skip
+- QUAL-02 (document versioning) is listed in Phase 3, not this wave - skip (already handled in DocumentsModule)
 - Quality infrastructure sets stage for Phase 3 compliance
 - Middleware order: TenantContext (sets RLS) → Rate Limit → Audit Log (captures after response)
 
@@ -254,7 +266,7 @@ Output: Rate limiting middleware, audit logging, encryption service, global exce
     - Test 2: Middleware captures response status, duration, endpoint, method
     - Test 3: Calls AuditLoggingService.log(eventType, payload, userAgent, ip)
     - Test 4: AuditLoggingService creates AuditLog record with tenant_id, user_id, event_type, payload, ip_address, user_agent, created_at
-    - Test 5: For chat queries: logs query text, retrieved_chunk_count, response_token_count
+    - Test 5: For chat queries: logs query, retrieved chunks, response length
     - Test 6: For document uploads: logs filename, size, status
     - Test 7: All logs use async write (fire-and-forget) to avoid blocking response
   </behavior>
@@ -295,68 +307,46 @@ Output: Rate limiting middleware, audit logging, encryption service, global exce
 </task>
 
 <task type="auto">
-  <name>Task 4: Create RateLimit middleware</name>
+  <name>Task 4: Create RateLimiter service and guard</name>
 <files>
-    src/shared/middleware/rate-limit.middleware.ts
+    src/shared/services/rate-limiter.service.ts
+    src/shared/guards/rate-limit.guard.ts
   </files>
+  <behavior>
+    - Test 1: RateLimiterService wraps RateLimiterRedis with getConnection from RedisService
+    - Test 2: Service exposes async consume(key: string, points: number = 1): Promise<void> that throws on limit exceeded
+    - Test 3: RateLimitGuard extracts user from request (JwtPayload), constructs key `rate-limit:{tenant_id}:{user_id}` and calls service.consume()
+    - Test 4: Guard throws BadRequestException with Retry-After when rate limit exceeded
+    - Test 5: Guard allows unauthenticated requests to pass through (skip rate limiting)
+  </behavior>
   <action>
-    Create rate limiting middleware using rate-limiter-flexible:
+    Create rate limiting infrastructure as guard:
 
-    ```typescript
-    import { Injectable, NestMiddleware, BadRequestException } from '@nestjs/common';
-    import { RateLimiterRedis } from 'rate-limiter-flexible';
-    import { Redis } from 'ioredis';
+    1. src/shared/services/rate-limiter.service.ts:
+       - Inject RedisService
+       - Create RateLimiterRedis instance in constructor using redisService.getConnection()
+       - Configure points = config.get('RATE_LIMIT_MAX_REQUESTS', 60), duration = config.get('RATE_LIMIT_WINDOW_MS', 60000)/1000
+       - Method: async consume(key: string, points = 1): Promise<void> that delegates to rateLimiter.consume()
+       - On error (rate limit exceeded), throws an error with msBeforeNext property
 
-    @Injectable()
-    export class RateLimitMiddleware implements NestMiddleware {
-      private readonly rateLimiter: RateLimiterRedis;
+    2. src/shared/guards/rate-limit.guard.ts (implements CanActivate):
+       - Inject RateLimiterService
+       - async canActivate(context: ExecutionContext): Promise<boolean>
+         * const request = context.switchToHttp().getRequest();
+         * const user = request.user as JwtPayload | undefined;
+         * if (!user) return true; // skip unauthenticated
+         * const key = `rate-limit:${user.tenant_id}:${user.sub}`;
+         * try { await this.rateLimiter.consume(key); return true; }
+         * catch (error: any) { throw new BadRequestException(`Too many requests. Try again in ${Math.round(error.msBeforeNext/1000)} seconds`); }
 
-      constructor(private readonly redisService: RedisService, private readonly config: ConfigService) {
-        const redisClient = this.redisService.getConnection() as Redis;
+    Apply to all protected controllers: Add @UseGuards(JwtAuthGuard, TenantContextGuard, RateLimitGuard)
 
-        const points = this.config.get<number>('RATE_LIMIT_MAX_REQUESTS', 60);
-        const duration = this.config.get<number>('RATE_LIMIT_WINDOW_MS', 60) / 1000;
-
-        this.rateLimiter = new RateLimiterRedis({
-          storeClient: redisClient,
-          points, // Number of requests allowed per duration
-          duration, // Duration in seconds
-          blockDuration: 60, // Block for 60s if limit exceeded
-        });
-      }
-
-      async use(req: Request, res: Response, next: NextFunction) {
-        // Extract user from JWT (requires JwtAuthGuard to have run before this middleware)
-        const user = (req as any).user as JwtPayload;
-        if (!user) {
-          // Skip rate limiting for unauthenticated endpoints (register, login)
-          return next();
-        }
-
-        const key = `rate-limit:${user.tenant_id}:${user.sub}`; // per-user per-tenant
-
-        try {
-          await this.rateLimiter.consume(key, 1);
-          next();
-        } catch (rejRes: any) {
-          const secs = Math.round(rejRes.msBeforeNext / 1000) || 60;
-          res.setHeader('Retry-After', String(secs));
-          throw new BadRequestException(`Too many requests. Please try again in ${secs} seconds.`);
-        }
-      }
-    }
-    ```
-
-    Apply this middleware AFTER JwtAuthGuard, so user is extracted. In app.module, use `app.use('/api', rateLimitMiddleware)` or route-specific via @UseMiddleware.
-
-    Configure environment: RATE_LIMIT_MAX_REQUESTS=60, RATE_LIMIT_WINDOW_MS=60000
-
-    Verify: Middleware uses Redis for distributed rate limiting; respects blockDuration.
+    Verify: Guard compiles and uses correct user extraction.
   </action>
   <verify>
-    <automated>grep -q "RateLimiterRedis" src/shared/middleware/rate-limit.middleware.ts && grep -q "consume(" src/shared/middleware/rate-limit.middleware.ts && echo "Rate limiting middleware defined"</automated>
+    <automated>grep -q "RateLimiterService" src/shared/services/rate-limiter.service.ts && grep -q "implements CanActivate" src/shared/guards/rate-limit.guard.ts && echo "Rate limiting service and guard defined"</automated>
   </verify>
-  <done>Rate limiting middleware ready for application</done>
+  <done>Rate limiting as guard ready for application</done>
 </task>
 
 <task type="auto">
@@ -416,7 +406,7 @@ Output: Rate limiting middleware, audit logging, encryption service, global exce
 </task>
 
 <task type="auto">
-  <name>Task 6: Create logging interceptor for structured logs</name>
+  <name="Task 6: Create logging interceptor for structured logs">
 <files>
     src/shared/interceptors/logging.interceptor.ts
   </files>
@@ -473,238 +463,60 @@ Output: Rate limiting middleware, audit logging, encryption service, global exce
 </task>
 
 <task type="auto">
-  <name>Task 7: Update main.ts with global pipes, filters, interceptors</name>
-<files>
-    src/main.ts
-  </files>
-  <action>
-    Update main.ts to apply all global middleware:
-
-    ```typescript
-    import { NestFactory } from '@nestjs/core';
-    import { AppModule } from './app/app.module';
-    import { ValidationPipe } from '@nestjs/common';
-    import helmet from 'helmet';
-    import { ConfigService } from '@nestjs/config';
-    import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
-    import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
-    import { RateLimitMiddleware } from './shared/middleware/rate-limit.middleware';
-
-    async function bootstrap() {
-      const app = await NestFactory.create(AppModule);
-      const configService = app.get(ConfigService);
-
-      // Security
-      app.use(helmet());
-
-      // Global validation
-      app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-
-      // Global interceptors
-      app.useGlobalInterceptors(new LoggingInterceptor());
-
-      // Global filters
-      app.useGlobalFilters(new HttpExceptionFilter());
-
-      // Rate limiting (apply after JWT auth middleware is set up)
-      // Middleware must run after JWT guard extracts user; so apply at app level but ensure JWT guard runs first on routes
-      app.use('/api', (req, res, next) => {
-        // The RateLimitMiddleware itself should check if user exists; if not, skip
-        // We'll use it as a route-specific middleware, not global, to avoid unauthenticated rate limiting
-        // Instead: apply per-module in controllers with @UseMiddleware(RateLimitMiddleware)
-        next();
-      });
-
-      // CORS for Electron later
-      app.enableCors({
-        origin: configService.get('FRONTEND_URL', 'http://localhost:3000'),
-        credentials: true,
-      });
-
-      const port = configService.get<number>('PORT', 3000);
-      await app.listen(port);
-      logger.log(`Listening on port ${port}`);
-    }
-    bootstrap();
-    ```
-
-    But better: Apply RateLimitMiddleware globally but let it skip unauthenticated requests. Modify RateLimitMiddleware to check `if (!req.user) return next();`
-
-    Then: `app.use(rateLimitMiddleware);`
-
-    Also set up request context logging (correlation ID) with continuation-local-storage if needed.
-
-    Verify: main.ts imports and applies all global middleware correctly; server starts without errors.
-  </action>
-<verify>
-    <automated>grep -q "ValidationPipe" src/main.ts && grep -q "LoggingInterceptor" src/main.ts && grep -q "HttpExceptionFilter" src/main.ts && echo "Global middleware configured"</automated>
-  </verify>
-  <done>main.ts configured with all global pipes, filters, interceptors</done>
-</task>
-
-<task type="auto">
-  <name>Task 8: Apply rate limiting to protected routes</name>
+  <name="Task 7: Apply rate limiting to protected routes">
 <files>
     src/auth/auth.module.ts
     src/documents/documents.module.ts
     src/chat/chat.module.ts
   </files>
   <action>
-    Apply RateLimitMiddleware to all module routes that require authentication:
-
-    Option A: In each controller, add @UseMiddleware(RateLimitMiddleware)
-    Option B: In each module, use `providers: [{ provide: APP_MIDDLEWARE, useClass: RateLimitMiddleware }]` with scope
-
-    Simpler: Apply at route level using decorator:
+    Apply RateLimitGuard to all module routes that require authentication:
 
     Update AuthController, DocumentsController, ChatController:
-    Add `@UseMiddleware(RateLimitMiddleware)` at class level (above @Controller) to all protected controllers.
-
-    Or apply globally in main.ts after JWT extraction. But we need JWT to have run. Issue: middleware order - global middleware runs BEFORE route guards. So if we apply globally, user not set yet.
-
-    Solution: Use `app.use('/api', (req, res, next) => { /* custom async middleware */ })` to extract user from JWT cookie manually? Not clean.
-
-    Better: Use `@UseGuards(JwtAuthGuard)` then `@UseMiddleware(RateLimitMiddleware)` - but middleware runs AFTER guards? Guards → middleware order unclear.
-
-    Check NestJS: Middleware runs BEFORE guards/interceptors/exception filters. So global rate limit can't access req.user.
-
-    Approach: Use `express-rate-limit` with a custom key generator that reads JWT from cookie. But we're using rate-limiter-flexible with custom key extraction.
-
-    Alternative: Apply rate limit as a GUARD, not middleware. Create RateLimitGuard implements CanActivate, runs AFTER JwtAuthGuard:
-
-    ```typescript
-    @Injectable()
-    export class RateLimitGuard implements CanActivate {
-      constructor(private rateLimiter: RateLimiterService) {}
-      async canActivate(context: ExecutionContext): Promise<boolean> {
-        const request = context.switchToHttp().getRequest();
-        const user = request.user as JwtPayload;
-        if (!user) return true; // skip
-        const key = `rate:${user.tenant_id}:${user.sub}`;
-        try {
-          await this.rateLimiter.consume(key);
-          return true;
-        } catch {
-          throw new BadRequestException('Rate limit exceeded');
-        }
-      }
-    }
-    ```
-
-    Then in controllers: `@UseGuards(JwtAuthGuard, RateLimitGuard)`.
-
-    Change to guard pattern for cleaner Nest integration.
-
-    Update: Instead of middleware, create RateLimitGuard in src/shared/guards/rate-limit.guard.ts and RateLimitService (thin wrapper around RateLimiterRedis). Apply to all protected controllers.
-
-    Let's do that:
-
-    - Create src/shared/services/rate-limiter.service.ts: wrapper around RateLimiterRedis
-    - Create src/shared/guards/rate-limit.guard.ts: guard that uses service
-    - Update protected controllers: add `@UseGuards(JwtAuthGuard, TenantContextGuard, RateLimitGuard)`
-
-    This fits better with NestJS lifecycle (guards run after JWT sets req.user).
-
-    Revised action:
-
-    Create:
-    - src/shared/services/rate-limiter.service.ts (injects RedisService, provides consume(key))
-    - src/shared/guards/rate-limit.guard.ts (extracts key from user, calls service)
-
-    Update src/auth/auth.module.ts, src/documents/documents.module.ts, src/chat/chat.module.ts to provide RateLimitGuard.
-    Update each controller to include `@UseGuards(..., RateLimitGuard)` after JwtAuthGuard.
+    Add `@UseGuards(JwtAuthGuard, TenantContextGuard, RateLimitGuard)` at class level (above @Controller) to all protected controllers.
 
     Verify: Guard applied consistently to all authenticated endpoints.
   </action>
   <verify>
     <automated>grep -q "RateLimitGuard" src/auth/auth.controller.ts && grep -q "RateLimitGuard" src/documents/documents.controller.ts && grep -q "RateLimitGuard" src/chat/chat.controller.ts && echo "Rate limit guard applied to all protected controllers"</automated>
   </verify>
-  <done>Rate limiting implemented as guard, applied to all protected endpoints</done>
+  <done>Rate limiting guard applied to all protected endpoints</done>
 </task>
 
 <task type="auto">
-  <name>Task 9: Document versioning (soft deletes and cascade)</name>
-<files>
-    prisma/schema.prisma
-    src/documents/documents.service.ts
-    src/documents/documents.controller.ts
-  </files>
-  <action>
-    Implement document versioning per QUAL-02 (though Phase 3, foundation in Phase 1):
-
-    Approach: Immutable upload history - every upload creates new Document record. No updating of existing documents. Deletion is soft delete (set deleted_at) with retention period. Actual deletion (purge) can be background job later.
-
-    Update Document model in schema.prisma if not already:
-    ```prisma
-    model Document {
-      id              Int      @id @default(autoincrement())
-      tenant_id       Int
-      user_id         Int
-      filename        String
-      mimetype        String
-      size            Int
-      status          DocumentStatus
-      error_message   String?
-      deleted_at      DateTime?
-      created_at      DateTime @default(now())
-      updated_at      DateTime @updatedAt
-      chunks          DocumentChunk[]
-
-      @@index([tenant_id])
-      @@index([user_id])
-      @@index([deleted_at])
-    }
-
-    enum DocumentStatus {
-      queued
-      processing
-      indexed
-      error
-    }
-    ```
-
-    Ensure DocumentChunk has document_id foreign key with onDelete: Cascade (so chunk cleanup on hard delete). Soft delete just marks document.deleted_at; queries filter out deleted documents.
-
-    Update DocumentsService:
-    - listDocuments: where { tenant_id, deleted_at: null }
-    - deleteDocument: soft delete → prisma.document.update({ where: { id, tenant_id }, data: { deleted_at: new Date() } })
-      Also trigger background job to delete Qdrant points (or do immediately)
-    - Hard purge: separate admin method (not in Phase 1)
-
-    Verify: Soft delete sets deleted_at; list excludes deleted documents.
-  </action>
-  <verify>
-    <automated>grep -q "deleted_at" prisma/schema.prisma && grep -q "deleted_at: null" src/documents/documents.service.ts && echo "Document versioning with soft delete implemented"</automated>
-  </verify>
-  <done>Document soft delete and filtering implemented (versioning foundation)</done>
-</task>
-
-<task type="auto">
-  <name>Task 10: Finalize all imports and compile check</name>
+  <name="Task 8: Finalize all imports and compile check</name>
 <files>
     src/app/app.module.ts
-    src/shared/module-barrel.ts (optional)
-</files>
+    src/main.ts
+  </files>
   <action>
     Final review: Ensure all modules imported correctly in AppModule in right order:
 
     ```typescript
-    imports: [
-      ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
-      DatabaseModule,
-      RedisModule,
-      QdrantModule,
-      AuthModule,
-      DocumentsModule,
-      ChatModule,
-    ]
+    @Module({
+      imports: [
+        ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+        DatabaseModule,
+        RedisModule,
+        QdrantModule,
+        AuthModule,
+        DocumentsModule,
+        ChatModule,
+      ],
+      controllers: [AppController],
+      providers: [],
+    })
+    export class AppModule {}
     ```
 
-    Also verify that all guards/services are provided in respective modules (AuthModule provides TenantContextGuard; DocumentsModule provides RateLimitGuard; ChatModule provides its guards).
+    Also verify that main.ts has applied all global middleware:
+    - ValidationPipe
+    - Helmet
+    - LoggingInterceptor
+    - HttpExceptionFilter
+    - AuditMiddleware (global via APP_MIDDLEWARE or in app.module)
 
     Run TypeScript compile: `npm run build` should succeed without errors. Fix any import/export issues.
-
-    Create a barrel file for shared modules to simplify imports (optional): src/shared/shared.module.ts that re-exports all shared services/middleware.
 
     Verify: Application compiles successfully; all modules resolved.
   </action>
@@ -735,27 +547,26 @@ Wave 5 - Cross-Cutting Quality Complete
    - Chat query → audited with event_type='chat_query' and payload includes query, retrieved_chunk_count
 
 **Requirements mapping:**
-- QUAL-03: Citation validation already implemented in Plan 05
-- QUAL-04: Rate limiting per user (RateLimitGuard)
-- QUAL-05: Encryption service for sensitive data at rest (API keys in later phases, but service ready)
+Since this plan is cross-cutting infrastructure, it supports multiple requirements:
+- QUAL-03: Citation validation already implemented in Plan 05 (not here)
+- Quality infrastructure: Rate limiting, audit logging, encryption, structured logging, error handling
 
 **Additional quality:**
 - Audit logging (QUAL-01) addressed via AuditLog table and middleware
-- Document versioning (QUAL-02) foundation: soft delete, deleted_at filtering
+- Document versioning (QUAL-02) already handled in DocumentsModule (soft delete)
 - Structured logging with winston and interceptor
 - Global exception filter for consistent error responses
 - Security headers via helmet
 
 **Critical checks:**
-- RateLimitGuard runs AFTER JwtAuthGuard (order in @UseGuards matters: JwtAuthGuard, RateLimitGuard)
-- AuditLog must respect RLS tenant isolation (tenant_id field present, foreign key to tenant table if exists; or at minimum set tenant_id from context)
+- RateLimitGuard runs AFTER JwtAuthGuard and TenantContextGuard (order in @UseGuards matters)
+- AuditLog must respect RLS tenant isolation (tenant_id field present)
 - Encryption key: ENCRYPTION_KEY must be long random string (32+ bytes). Recommend generating: `openssl rand -base64 32`
 - Middleware order: RateLimitGuard on each controller; AuditMiddleware global (runs after response); LoggingInterceptor global (logs request start/complete)
 
 **Performance:**
 - Rate limiting uses Redis → O(1) operations, negligible overhead
 - Audit logging fire-and-forget: async, doesn't block response; but ensure connection pool has capacity
-- Compression? Could add compress middleware (compression) for responses
 
 **Security:**
 - Rate limit keys per tenant + user prevents DoS
@@ -772,20 +583,17 @@ Cross-cutting quality features complete when:
 - [ ] RateLimitGuard enforces 60 requests/min per user; returns 429 with Retry-After
 - [ ] HttpExceptionFilter formats errors as JSON; logs stack traces
 - [ ] LoggingInterceptor emits structured winston JSON logs with latency, status, user context
-- [ ] Soft delete implemented: document.deleted_at filters from list queries; cascade cleanup of chunks
-- [ ] All protected controllers (Auth, Documents, Chat) include `@UseGuards(..., RateLimitGuard)`
-- [ ] Global middleware order: ValidationPipe → LoggingInterceptor → HttpExceptionFilter → RateLimitGuard(per route) → AuditMiddleware
+- [ ] Soft delete already implemented in DocumentsModule (covered by DOC-01-08)
+- [ ] All protected controllers (Auth, Documents, Chat) include `@UseGuards(JwtAuthGuard, TenantContextGuard, RateLimitGuard)`
+- [ ] Global middleware order: ValidationPipe → LoggingInterceptor → HttpExceptionFilter → RateLimitGuard → AuditMiddleware
 - [ ] Helmet enabled for security headers
 - [ ] Full test suite passes: `npm test` with ≥80% coverage
 
 **Deployment readiness:**
-- [ ] ENCRYPTION_KEY, RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS documented in .env.example (from Plan 01)
+- [ ] ENCRYPTION_KEY, RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS documented in .env.example
 - [ ] PostgreSQL connection supports RLS (migrations 001, 002 applied)
 - [ ] Redis connected for rate limiting
 - [ ] Winston logs structured for aggregation (JSON fields: timestamp, level, message, additional)
-
-**File count:**
-This wave creates ~8 new files and modifies ~4 existing files (app.module, main.ts, controllers, documents service for soft delete).
 
 </success_criteria>
 

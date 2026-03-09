@@ -66,6 +66,10 @@ must_haves:
       to: "src/documents/documents.service.ts"
       via: "documentQueue.add()"
       pattern: "documentQueue.add"
+    - from: "src/documents/documents.service.ts"
+      to: "BullMQ Queue"
+      via: "queue.add('process-document', jobData)"
+      pattern: "queue.add"
     - from: "src/documents/jobs/document-upload.worker.ts"
       to: "src/documents/processors/*.processor.ts"
       via: "extractText(switch on mimetype)"
@@ -86,6 +90,10 @@ must_haves:
       to: "src/shared/database/database.service.ts"
       via: "setTenantContext before DB ops"
       pattern: "setTenantContext"
+    - from: "src/auth/auth.module.ts"
+      to: "src/auth/middleware/tenant-context.middleware.ts"
+      via: "APP_MIDDLEWARE provider"
+      pattern: "APP_MIDDLEWARE"
 
 ---
 
@@ -101,7 +109,7 @@ Output: Upload endpoint, document processors, chunking service, BullMQ workers, 
 <execution_context>
 @/Users/franciscoegloff/.claude/get-shit-done/workflows/execute-plan.md
 @/Users/franciscoegloff/.claude/get-shit-done/templates/summary.md
-</context>
+</execution_context>
 
 <context>
 @.planning/PROJECT.md
@@ -413,7 +421,7 @@ Output: Upload endpoint, document processors, chunking service, BullMQ workers, 
 </tasks>
 
 <verification>
-Wave 3 - Document Processing Pipeline Complete
+Wave 4 - Document Processing Pipeline Complete
 
 **Automated verification:**
 1. Unit tests (from Plan 01): `npx jest tests/documents/*.spec.ts --runInBand`
