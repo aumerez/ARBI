@@ -9,10 +9,10 @@ Requirements for initial MVP release. Each maps to roadmap phases.
 
 ### Authentication & Multi-Tenancy
 
-- [ ] **AUTH-01**: User can sign up with email and password (email verification required)
-- [ ] **AUTH-02**: User can log in with credentials and receive persistent session (JWT)
-- [ ] **AUTH-03**: User can log out from any page (session invalidation)
-- [ ] **AUTH-04**: User can reset password via email link
+- [x] **AUTH-01**: User can sign up with email and password (email verification required)
+- [x] **AUTH-02**: User can log in with credentials and receive persistent session (JWT)
+- [x] **AUTH-03**: User can log out from any page (session invalidation)
+- [x] **AUTH-04**: User can reset password via email link
 - [ ] **TEN-01**: System enforces tenant isolation at database level (PostgreSQL RLS)
 - [ ] **TEN-02**: All data operations automatically filter by tenant context (metadata tenant_id)
 - [ ] **TEN-03**: Users can only access their own tenant's documents and chat history
@@ -26,32 +26,32 @@ Requirements for initial MVP release. Each maps to roadmap phases.
 
 ### Document Management
 
-- [ ] **DOC-01**: User can upload documents (PDF, DOCX, TXT) with drag-and-drop and file picker
-- [ ] **DOC-02**: System validates file type and size (max 50MB per document)
-- [ ] **DOC-03**: System displays upload progress indicator
-- [ ] **DOC-04**: System processes uploaded documents asynchronously with status tracking
-- [ ] **DOC-05**: User sees document status: Queued, Processing, Indexed, Error
-- [ ] **DOC-06**: System extracts text content from documents using production-grade parsers
-- [ ] **DOC-07**: System chunks documents with semantic awareness (respects sections, 500-1500 tokens)
-- [ ] **DOC-08**: System generates embeddings for chunks and stores in vector database with tenant_id
+- [x] **DOC-01**: User can upload documents (PDF, DOCX, TXT) with drag-and-drop and file picker
+- [x] **DOC-02**: System validates file type and size (max 50MB per document)
+- [x] **DOC-03**: System displays upload progress indicator
+- [x] **DOC-04**: System processes uploaded documents asynchronously with status tracking
+- [x] **DOC-05**: User sees document status: Queued, Processing, Indexed, Error
+- [x] **DOC-06**: System extracts text content from documents using production-grade parsers
+- [x] **DOC-07**: System chunks documents with semantic awareness (respects sections, 500-1500 tokens)
+- [x] **DOC-08**: System generates embeddings for chunks and stores in vector database with tenant_id
 - [ ] **DOC-09**: User can list all their tenant's documents with metadata (name, type, upload date, size, status)
 - [ ] **DOC-10**: User can delete documents (cascade cleanup from metadata DB and vector store)
 - [ ] **DOC-11**: System shows clear error messages for failed uploads/processing
 
 ### RAG Chat Interface (Core)
 
-- [ ] **CHAT-01**: User can open chat interface with natural language text input
-- [ ] **CHAT-02**: System retrieves relevant document chunks using hybrid search (semantic + BM25)
-- [ ] **CHAT-03**: System generates responses using Claude API grounded in retrieved context
-- [ ] **CHAT-04**: System includes inline citations ([1], [2]) linking to source documents
+- [x] **CHAT-01**: User can open chat interface with natural language text input
+- [x] **CHAT-02**: System retrieves relevant document chunks using hybrid search (semantic + BM25)
+- [x] **CHAT-03**: System generates responses using Claude API grounded in retrieved context
+- [x] **CHAT-04**: System includes inline citations ([1], [2]) linking to source documents
 - [ ] **CHAT-05**: User can click citations to view source document snippets with context
 - [ ] **CHAT-06**: System shows document name, page/section when available in citations
 - [ ] **CHAT-07**: System maintains conversation history within a chat session
 - [ ] **CHAT-08**: User can create new chat conversations
 - [ ] **CHAT-09**: User can view list of past conversations (date, preview, re-open)
-- [ ] **CHAT-10**: System provides streaming responses (type-out effect)
-- [ ] **CHAT-11**: System refuses to answer when no relevant context is found (no hallucinations)
-- [ ] **CHAT-12**: System indicates confidence/grounding when sources are weak
+- [x] **CHAT-10**: System provides streaming responses (type-out effect)
+- [x] **CHAT-11**: System refuses to answer when no relevant context is found (no hallucinations)
+- [x] **CHAT-12**: System indicates confidence/grounding when sources are weak
 - [ ] **CHAT-13**: User can delete chat conversations (with cascade cleanup from database)
 
 ### Demo Content
@@ -66,7 +66,7 @@ Requirements for initial MVP release. Each maps to roadmap phases.
 
 - [ ] **QUAL-01**: System logs all queries and responses for audit trail (tenant-scoped)
 - [ ] **QUAL-02**: System maintains document versioning (immutable upload history)
-- [ ] **QUAL-03**: System validates response citations against retrieved sources (no fake citations)
+- [x] **QUAL-03**: System validates response citations against retrieved sources (no fake citations)
 - [ ] **QUAL-04**: System implements rate limiting per user to prevent abuse
 - [ ] **QUAL-05**: System encrypts sensitive data at rest (JWT secrets, API keys)
 

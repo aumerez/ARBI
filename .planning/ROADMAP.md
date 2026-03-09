@@ -56,7 +56,11 @@
 **Plans:** 6 plans in 5 waves
 
 **Plan list:**
-- [ ] **01-backend-mvp-01-PLAN-01-test-scaffold** - Initialize Jest test framework and create all 20 test file scaffolds for TDD approach (Wave 0)
+- [x] **01-backend-mvp-01-PLAN-01-test-scaffold** - Initialize Jest test framework and create all 20 test file scaffolds for TDD approach (Wave 0)
+  - ✅ 01a: Test config (Jest, coverage, ts-jest)
+  - ✅ 01b: Test fixtures (conftest, mocks, builders, samples)
+  - ✅ 01c: Unit test scaffolds (20 spec files with describe/it stubs)
+  - ⏳ 01d: Integration test scaffolds (end-to-end)
 - [ ] **01-backend-mvp-02-PLAN-02-infrastructure** - Set up PostgreSQL with RLS, Redis, Qdrant client, OpenAI embeddings; create Prisma schema and migrations (Wave 1)
 - [ ] **01-backend-mvp-03-PLAN-03-auth** - Implement JWT authentication with email verification, password reset, and tenant context middleware (Wave 2)
 - [ ] **01-backend-mvp-04-PLAN-04-documents** - Build document upload pipeline with BullMQ async workers, text extraction, semantic chunking, embedding generation (Wave 3)
