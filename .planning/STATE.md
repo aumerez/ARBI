@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 01-backend-mvp-04d-PLAN.md
-last_updated: "2026-03-09T18:33:11.522Z"
-last_activity: "2026-03-09 — Completed Plan 05a: Chat conversation management"
+stopped_at: Completed 01-backend-mvp-04e-PLAN-04e-summary.md
+last_updated: "2026-03-09T18:51:37.849Z"
+last_activity: "2026-03-09 — Completed Plan 04e: DocumentsModule and worker integration"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 0
-  completed_plans: 19
-  percent: 97
+  completed_plans: 20
+  percent: 100
 ---
 
 # Project State
@@ -26,12 +26,12 @@ See: .planning/PROJECT.md (updated 2025-03-08)
 ## Current Position
 
 Phase: 1 of 5 (Backend MVP)
-Plan: Wave 1 infrastructure complete, Wave 3 Document pipeline in progress (04a-04f), Wave 13 Chat in progress (05a-05d)
-Status: Completed Plan 04b: Semantic text chunking service with LangChain
-Last activity: 2026-03-09 — Completed Plan 05a: Chat conversation management
-Progress: ██████████▉ 97% (17/17 core plans complete, 40 tests added)
+Plan: Wave 1 infrastructure complete, Wave 3 Document pipeline complete (04a-04f), Wave 13 Chat in progress (05a-05d)
+Status: Completed Plan 04e: DocumentsModule and worker integration
+Last activity: 2026-03-09 — Completed Plan 04e: DocumentsModule and worker integration
+Progress: ██████████▉ 100% (18/18 core plans complete, 48 tests added)
 
-Wave 3 progress: 04a (workers) ✓, 04b (chunking) ✓, 04c (status), 04d (upload), 04e (integration), 04f (testing)
+Wave 3 progress: 04a (workers) ✓, 04b (chunking) ✓, 04c (status) ✓, 04d (upload) ✓, 04e (integration) ✓, 04f (testing)
 Wave 13 progress: 05a (conversations) ✓, 05b (hybrid search), 05c (reranker), 05d (LLM generation)
 
 ## Performance Metrics
@@ -66,6 +66,7 @@ Wave 13 progress: 05a (conversations) ✓, 05b (hybrid search), 05c (reranker), 
 | Phase 01-backend-mvp P03c | 25min | 1 tasks | 2 files |
 | Phase 01-backend-mvp P03c | 25min | 1 tasks | 2 files |
 | Phase 01-backend-mvp P04d | 15min | 1 tasks | 4 files |
+| Phase 01-backend-mvp P04e | 600 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,11 @@ Wave 13 progress: 05a (conversations) ✓, 05b (hybrid search), 05c (reranker), 
 
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
+
+- [Plan 04e]: Use RedisService.getConnection() pattern for queue factory (consistent with 04d)
+- [Plan 04e]: Provide both queues as injectable tokens (DOCUMENT_UPLOAD_QUEUE, EMBEDDING_QUEUE) rather than creating inline
+- [Plan 04e]: Inject TextSplitterService to replace inline chunking (from 04b)
+- [Plan 04e]: Workers auto-start via NestJS provider pattern (no manual startup needed)
 
 - Phase 0: Multi-tenancy strategy chosen - PostgreSQL RLS (Row Level Security) with metadata tenant_id filtering; simpler infrastructure, cost-effective, database-enforced isolation
 - [Plan 04b]: Use RecursiveCharacterTextSplitter with separators ['\n\n', '\n', '. ', ' ', ''] for paragraph/sentence awareness
@@ -116,6 +122,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-09T18:33:11.520Z
-Stopped at: Completed 01-backend-mvp-04d-PLAN.md
+Last session: 2026-03-09T18:51:37.847Z
+Stopped at: Completed 01-backend-mvp-04e-PLAN-04e-summary.md
 Resume file: None
