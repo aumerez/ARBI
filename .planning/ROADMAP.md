@@ -80,8 +80,8 @@
   - ✅ 05a: Chat conversation management with authentication (Completed 2026-03-09)
   - ✅ 05b: Hybrid search with vector + BM25 (RRF fusion) (Completed 2026-03-09)
   - ✅ 05c: Reranker for improved result ordering (Completed 2026-03-09)
-  - [ ] 05d: LLM generation with streaming and citations
-  - [ ] 05e: Citation validation and no-context guard
+  - [x] 05d: LLM generation with streaming and citations
+  - [x] 05e: Citation validation and no-context guard
 - [ ] **01-backend-mvp-06-PLAN-06-crosscutting** - Add rate limiting, audit logging, encryption service, soft deletes, structured logging, error handling (Wave 5)
 
 ---
