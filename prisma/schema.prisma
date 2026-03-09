@@ -171,7 +171,7 @@ model AuditLog {
 
   tenant           Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
 
-  @@index([tenant_id])
-  @@index([user_id])
-  @@index([created_at])
+  @@index([tenant_id, created_at], name: "idx_audit_log_tenant_created")
+  @@index([event_type], name: "idx_audit_log_event")
+  @@index([tenant_id, user_id])
 }
