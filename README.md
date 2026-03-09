@@ -55,6 +55,51 @@ ops-ai-platform/
 └── tests/            # E2E + unit
 ```
 
+## ⚙️ Configuration
+
+### Rate Limiting
+
+The platform implements per-user rate limiting to prevent API abuse:
+
+- **Default limits**: 60 requests per 60 seconds per authenticated user
+- **Environment variables**:
+  - `RATE_LIMIT_MAX`: Maximum requests per window (default: 60)
+  - `RATE_LIMIT_WINDOW`: Time window in seconds (default: 60)
+
+Rate limiting is enforced by the `RateLimitGuard`, which can be applied to any controller using the `@UseGuards(RateLimitGuard)` decorator. The guard automatically extracts the `user_id` from the JWT payload (set by `JwtAuthGuard`) and checks the rate limit.
+
+#### Custom Per-Route Limits
+
+To set custom rate limits for specific routes, use the `@RateLimit` metadata decorator:
+
+```typescript
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { RateLimitGuard, RATE_LIMIT_METADATA } from '../shared/guards/rate-limit.guard';
+
+// Apply custom limit: 10 requests per 60 seconds
+@Controller('resource-intensive')
+@UseGuards(JwtAuthGuard, RateLimitGuard)
+export class ResourceIntensiveController {
+  @Get()
+  @Reflector().metadata(RATE_LIMIT_METADATA, { points: 10, duration: 60 })
+  async expensiveOperation() {
+    // This route has stricter rate limits
+  }
+}
+```
+
+#### Response Headers
+
+When rate limited, the API returns:
+- Status: `429 Too Many Requests`
+- Header `Retry-After`: Seconds until limit resets
+- Header `X-RateLimit-Limit`: Configured limit for the route
+- Header `X-RateLimit-Remaining`: Remaining requests in current window
+
+#### Graceful Degradation
+
+If Redis is unavailable or an error occurs during rate limit checking, the system **fails open** (allows the request) and logs a warning. This ensures rate limiting never disrupts core functionality.
+
 ## 🚀 Quick Start (Development)
 
 ```bash
