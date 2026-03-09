@@ -166,6 +166,19 @@ export class QdrantService {
     }
   }
 
+  async deletePoints(tenantId: number, pointsIds: string[] | number[]): Promise<void> {
+    const collectionName = this.collectionName(tenantId);
+    try {
+      await this.client.delete(collectionName, {
+        points: pointsIds,
+      });
+      this.logger.debug(`Deleted ${pointsIds.length} points from ${collectionName}`);
+    } catch (error) {
+      this.logger.error(`Failed to delete points from ${collectionName}`, error);
+      throw error;
+    }
+  }
+
   private collectionName(tenantId: number): string {
     return `${this.collectionPrefix}${tenantId}`;
   }
