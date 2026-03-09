@@ -82,12 +82,12 @@
   - ✅ 05c: Reranker for improved result ordering (Completed 2026-03-09)
   - [x] 05d: LLM generation with streaming and citations
   - [x] 05e: Citation validation and no-context guard
-- [ ] **01-backend-mvp-06-PLAN-06-crosscutting** - Add rate limiting, audit logging, encryption service, soft deletes, structured logging, error handling (Wave 5)
+- [x] **01-backend-mvp-06-PLAN-06-crosscutting** - Add rate limiting, audit logging, encryption service, soft deletes, structured logging, error handling (Wave 5)
   - [x] 06a: Encryption service and audit tables (AES-256-GCM, RLS policy)
-  - [ ] 06b: Audit logging integration
-  - [ ] 06c: Rate limiting middleware
+  - [x] 06b: Audit logging integration
+  - [x] 06c: Rate limiting middleware
   - [x] 06d: Global middleware and interceptors
-  - [ ] 06e: Finalization and error handling polish
+  - [x] 06e: Finalization and error handling polish
 
 ---
 
