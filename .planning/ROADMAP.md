@@ -53,7 +53,15 @@
 5. System refuses to answer when no relevant context found (no hallucinations) and indicates confidence/grounding when sources are weak
 6. System validates response citations against retrieved sources to prevent fake citations
 
-**Plans:** TBD
+**Plans:** 6 plans in 5 waves
+
+**Plan list:**
+- [ ] **01-backend-mvp-01-PLAN-01-test-scaffold** - Initialize Jest test framework and create all 20 test file scaffolds for TDD approach (Wave 0)
+- [ ] **01-backend-mvp-02-PLAN-02-infrastructure** - Set up PostgreSQL with RLS, Redis, Qdrant client, OpenAI embeddings; create Prisma schema and migrations (Wave 1)
+- [ ] **01-backend-mvp-03-PLAN-03-auth** - Implement JWT authentication with email verification, password reset, and tenant context middleware (Wave 2)
+- [ ] **01-backend-mvp-04-PLAN-04-documents** - Build document upload pipeline with BullMQ async workers, text extraction, semantic chunking, embedding generation (Wave 3)
+- [ ] **01-backend-mvp-05-PLAN-05-chat-rag** - Implement RAG engine: hybrid search with RRF, Claude streaming, citation validation, no-context guard (Wave 4)
+- [ ] **01-backend-mvp-06-PLAN-06-crosscutting** - Add rate limiting, audit logging, encryption service, soft deletes, structured logging, error handling (Wave 5)
 
 ---
 
@@ -121,7 +129,7 @@
 | Phase | Name | Requirements | Status | Plans Complete |
 |-------|------|--------------|--------|----------------|
 | 0 | Architecture & Foundation | 5 | Not started | 0/3 |
-| 1 | Backend MVP | 20 | Not started | 0/8 |
+| 1 | Backend MVP | 20 | In planning | 0/6 |
 | 2 | Desktop MVP | 13 | Not started | 0/6 |
 | 3 | Evaluation & Compliance | 2 | Not started | 0/5 |
 | 4 | Polish & Demo Preparation | 5 | Not started | 0/6 |
@@ -160,7 +168,28 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4
 
 ---
 
-*Roadmap created: 2025-03-08*
-*Based on research recommendations from SUMMARY.md*
-*Granularity: coarse (5 phases)*
-*Mode: yolo*
+## Phase 1 Plan Structure
+
+**Wave 0 (Test Scaffolding):**
+- Plan 01: Test infrastructure, fixtures, .env.example (autonomous)
+
+**Wave 1 (Infrastructure):**
+- Plan 02: Database schema, RLS, Redis, Qdrant, OpenAI clients (autonomous)
+
+**Wave 2 (Authentication):**
+- Plan 03: Auth module with JWT, registration, login, logout, password reset (autonomous)
+
+**Wave 3 (Document Pipeline):**
+- Plan 04: Upload endpoint, processors, chunking, BullMQ workers (autonomous)
+
+**Wave 4 (RAG Chat):**
+- Plan 05: Hybrid search, Claude streaming, citations, validation (autonomous)
+
+**Wave 5 (Cross-Cutting Quality):**
+- Plan 06: Rate limiting, audit logging, encryption, error handling, soft deletes (autonomous)
+
+All waves are autonomous (no checkpoints) and can be executed sequentially or with parallelization where dependencies allow (Wave 0 independent of others; Wave 2-5 sequential due to dependencies).
+
+*Roadmap updated: 2025-03-08*
+*Phase 1 plans created: 6 plans across 5 waves*
+*Planned by: gsd-planner*
