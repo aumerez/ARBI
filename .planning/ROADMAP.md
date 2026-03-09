@@ -83,6 +83,11 @@
   - [x] 05d: LLM generation with streaming and citations
   - [x] 05e: Citation validation and no-context guard
 - [ ] **01-backend-mvp-06-PLAN-06-crosscutting** - Add rate limiting, audit logging, encryption service, soft deletes, structured logging, error handling (Wave 5)
+  - [x] 06a: Encryption service and audit tables (AES-256-GCM, RLS policy)
+  - [ ] 06b: Audit logging integration
+  - [ ] 06c: Rate limiting middleware
+  - [ ] 06d: Global middleware and interceptors
+  - [ ] 06e: Finalization and error handling polish
 
 ---
 
@@ -150,12 +155,12 @@
 | Phase | Name | Requirements | Status | Plans Complete |
 |-------|------|--------------|--------|----------------|
 | 0 | Architecture & Foundation | 5 | Completed | 3/3 |
-| 1 | Backend MVP | 20 | In progress | 3/6 |
+| 1 | Backend MVP | 20 | In progress | 4/6† |
 | 2 | Desktop MVP | 13 | Not started | 0/6 |
 | 3 | Evaluation & Compliance | 2 | Not started | 0/5 |
 | 4 | Polish & Demo Preparation | 5 | Not started | 0/6 |
 
----
+† Phase 1 has 6 main plans but Plan 06 is subdivided into 5 sub-plans (06a-06e); progress shows main plan completion.
 
 ## Coverage Summary
 

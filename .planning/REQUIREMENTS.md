@@ -68,7 +68,7 @@ Requirements for initial MVP release. Each maps to roadmap phases.
 - [ ] **QUAL-02**: System maintains document versioning (immutable upload history)
 - [x] **QUAL-03**: System validates response citations against retrieved sources (no fake citations)
 - [ ] **QUAL-04**: System implements rate limiting per user to prevent abuse
-- [ ] **QUAL-05**: System encrypts sensitive data at rest (JWT secrets, API keys)
+- [x] **QUAL-05**: System encrypts sensitive data at rest (JWT secrets, API keys)
 
 ## v2 Requirements
 
@@ -174,9 +174,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEMO-05 | Phase 4 | Mapped |
 | QUAL-01 | Phase 3 | Mapped |
 | QUAL-02 | Phase 3 | Mapped |
-| QUAL-03 | Phase 1 | Mapped |
+| QUAL-03 | Phase 1 | Complete |
 | QUAL-04 | Phase 0 | Mapped |
-| QUAL-05 | Phase 0 | Mapped |
+| QUAL-05 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 40 total

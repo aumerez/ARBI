@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 01-backend-mvp-05e-PLAN-05e-citation-validator.md
-last_updated: "2026-03-09T20:06:45.912Z"
-last_activity: "2026-03-09 — Completed Plan 05e: Citation validator integrated"
+status: in-progress
+stopped_at: Completed 01-backend-mvp-06a-PLAN-06a-encryption-audit-tables.md
+last_updated: "2026-03-09T20:24:00.000Z"
+last_activity: "2026-03-09 — Completed Plan 06a: Encryption service and audit tables"
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
+  total_plans: 24
   completed_plans: 24
   percent: 100
 ---
@@ -26,13 +26,14 @@ See: .planning/PROJECT.md (updated 2025-03-08)
 ## Current Position
 
 Phase: 1 of 5 (Backend MVP)
-Plan: Wave 1 infrastructure complete, Wave 3 Document pipeline complete (04a-04f), Wave 13 Chat in progress (05a-05e)
-Status: Completed Plan 05e: Citation validator integrated
-Last activity: 2026-03-09 — Completed Plan 05e: Citation validator integrated
-Progress: ██████████▉ 100% (23/23 core plans complete, 99+ tests added)
+Plan: Wave 1 infrastructure complete, Wave 3 Document pipeline complete (04a-04f), Wave 13 Chat complete (05a-05e), Wave 18 Security foundations complete (06a)
+Status: Completed Plan 06a: Encryption service and audit tables
+Last activity: 2026-03-09 — Completed Plan 06a: Encryption service and audit tables
+Progress: ██████████▉ 100% (24/24 core plans complete, 110+ tests added)
 
 Wave 3 progress: 04a (workers) ✓, 04b (chunking) ✓, 04c (status) ✓, 04d (upload) ✓, 04e (integration) ✓, 04f (testing)
 Wave 13 progress: 05a (conversations) ✓, 05b (hybrid search) ✓, 05c (reranker) ✓, 05d (LLM generation) ✓, 05e (citation validation) ✓
+Wave 18 progress: 06a (encryption & audit) ✓
 
 ## Performance Metrics
 
@@ -70,6 +71,7 @@ Wave 13 progress: 05a (conversations) ✓, 05b (hybrid search) ✓, 05c (reranke
 | Phase 01-backend-mvp P05c | 15 | 2 tasks | 7 files |
 | Phase 01-backend-mvp P05d | 5 | 2 tasks | 2 files |
 | Phase 01-backend-mvp P05e | 15 | 2 tasks | 5 files |
+| Phase 01-backend-mvp P06a | 15min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -122,6 +124,10 @@ Recent decisions affecting current work:
 - [Phase 01-backend-mvp]: Fetch missing embeddings from Qdrant via getPoints before reranking
 - [Phase 01-backend-mvp]: Use AsyncIterable instead of Stream type for controller response; controller method not marked async; type consistency via shared providers.interface
 - [Plan 05e]: Citation validation called after streaming completes but before save; warnings logged but message still saved (graceful degradation, no schema changes)
+- [Plan 06a]: Used Node.js built-in crypto module instead of third-party library (simplicity, no dependencies)
+- [Plan 06a]: Encryption key derived with scryptSync for defense-in-depth (adds salting even with single key)
+- [Plan 06a]: Audit payload stored as JSONB for flexible event schema evolution
+- [Plan 06a]: RLS policy uses current_setting('app.current_tenant') requiring middleware to set context
 
 ### Pending Todos
 
