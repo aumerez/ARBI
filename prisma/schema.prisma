@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id           Int            @id @default(autoincrement())
+  name         String
+  plan         String?        // e.g., "basic", "enterprise"
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
+
+  users        User[]
+  documents    Document[]
+  chats        Chat[]
+  chatMessages ChatMessage[]
+  documentChunks DocumentChunk[]
+  refreshTokens RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs    AuditLog[]
+}
+
+model User {
+  id               Int            @id @default(autoincrement())
+  email            String         @unique
+  password_hash    String
+  tenant_id        Int
+  email_verified   Boolean        @default(false)
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+
+  tenant           Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  documents        Document[]
+  chats            Chat[]
+  refreshTokens    RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([tenant_id])
+  @@index([email])
+}
+
+model Document {
+  id               Int            @id @default(autoincrement())
+  tenant_id        Int
+  user_id          Int            // uploader
+  filename         String
+  mimetype         String
+  size             Int            // bytes
+  status           DocumentStatus @default(queued)
+  error_message    String?
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+
+  tenant           Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  user             User           @relation(fields: [user_id], references: [id])
+  chunks           DocumentChunk[]
+
+  @@index([tenant_id])
+  @@index([user_id])
+  @@index([status])
+}
+
+enum DocumentStatus {
+  queued
+  processing
+  indexed
+  error
+}
+
+model DocumentChunk {
+  id               Int            @id @default(autoincrement())
+  tenant_id        Int
+  document_id      Int
+  chunk_index      Int
+  content          String         // max 65535 chars? adjust
+  token_count      Int
+  created_at       DateTime       @default(now())
+
+  tenant           Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  document         Document       @relation(fields: [document_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
+  @@index([document_id])
+}
+
+model Chat {
+  id               Int            @id @default(autoincrement())
+  tenant_id        Int
+  user_id          Int
+  title            String?
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+
+  tenant           Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  user             User           @relation(fields: [user_id], references: [id])
+  messages         ChatMessage[]
+
+  @@index([tenant_id])
+  @@index([user_id])
+}
+
+model ChatMessage {
+  id                Int            @id @default(autoincrement())
+  tenant_id         Int
+  chat_id           Int
+  role              ChatRole
+  content           String         // @db.Text? for long text
+  citations         Json?          // array of { number, documentId, page? }
+  retrieved_chunk_ids Json?       // array of chunk IDs
+  created_at        DateTime       @default(now())
+
+  tenant            Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  chat              Chat           @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
+  @@index([chat_id])
+}
+
+enum ChatRole {
+  user
+  assistant
+}
+
+model RefreshToken {
+  id               Int            @id @default(autoincrement())
+  tenant_id        Int
+  user_id          Int
+  token_hash       String         @unique
+  expires_at       DateTime
+  revoked          Boolean        @default(false)
+  created_at       DateTime       @default(now())
+
+  tenant           Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  user             User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
+  @@index([user_id])
+  @@index([token_hash])
+}
+
+model PasswordResetToken {
+  id               Int            @id @default(autoincrement())
+  tenant_id        Int
+  user_id          Int
+  token_hash       String
+  expires_at       DateTime
+  used             Boolean        @default(false)
+  created_at       DateTime       @default(now())
+
+  tenant           Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  user             User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
+  @@index([user_id])
+  @@index([token_hash])
+}
+
+model AuditLog {
+  id               BigInt         @id @default(autoincrement())
+  tenant_id        Int
+  user_id          Int?
+  event_type       String
+  payload          Json
+  ip_address       String?
+  user_agent       String?
+  created_at       DateTime       @default(now())
+
+  tenant           Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
+  @@index([user_id])
+  @@index([created_at])
+}
