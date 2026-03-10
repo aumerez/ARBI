@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HybridSearchService } from '../../src/chat/retrieval/hybrid-search.service';
+import { HybridSearchService } from '../../../src/chat/retrieval/hybrid-search.service';
 import { MockQdrantService } from '../../../mocks/qdrant.service';
 import { MockPostgresService } from '../../../mocks/postgres.service';
 import { ChunkBuilder } from '../../../conftest';

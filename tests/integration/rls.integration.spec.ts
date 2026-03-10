@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../src/app/app.module';
-import { PostgresService } from '../src/shared/database/database.service';
+import { AppModule } from '../../src/app/app.module';
+import { PostgresService } from '../../src/shared/database/database.service';
 
 describe('RLS Enforcement (TEN-01)', () => {
   let app: INestApplication;

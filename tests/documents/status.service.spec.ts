@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { StatusService } from '../src/documents/status.service';
-import { MockPostgresService } from '../../mocks/postgres.service';
-import { DocumentBuilder } from '../../conftest';
+import { StatusService } from '../../src/documents/status.service';
+import { MockPostgresService } from '../mocks/postgres.service';
+import { DocumentBuilder } from '../conftest';
 
 describe('StatusService (DOC-03, DOC-04)', () => {
   let service: StatusService;

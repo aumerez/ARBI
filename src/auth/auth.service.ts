@@ -7,6 +7,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { User } from './types/user.entity';
 import { ConfigService } from '@nestjs/config';
+import { EmailService } from '../shared/infrastructure/email.service';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +17,7 @@ export class AuthService {
     private readonly database: DatabaseService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly emailService: EmailService,
   ) {}
 
   async register(dto: RegisterDto): Promise<User> {
@@ -31,7 +33,7 @@ export class AuthService {
     // Hash password with bcrypt (12 rounds)
     const password_hash = await bcrypt.hash(password, 12);
 
-    // Create user
+    // Create user with unverified email
     const user = await prisma.user.create({
       data: {
         email,
@@ -41,14 +43,80 @@ export class AuthService {
       },
     });
 
-    // Generate verification token (mock: just generate and save, don't actually email)
-    const verificationToken = randomUUID();
-    // TODO: send email with verification link
-    this.logger.log(`User registered: ${email} (tenant ${tenant_id}), verification token: ${verificationToken}`);
+    // Generate verification token with 24-hour expiry
+    const token = randomUUID();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await prisma.verificationToken.create({
+      data: {
+        user_id: user.id,
+        tenant_id: user.tenant_id,
+        token,
+        expires_at: expiresAt,
+      },
+    });
+
+    // Send verification email (non-blocking, failures logged but not thrown)
+    try {
+      await this.emailService.sendVerificationEmail(user.email, token);
+    } catch (error) {
+      this.logger.error(`Failed to send verification email to ${user.email}:`, error);
+    }
+
+    this.logger.log(`User registered: ${email} (tenant ${tenant_id}), verification token generated`);
 
     // Return user without password_hash
     const { password_hash: _, ...userWithoutPassword } = user;
-    return userWithoutPassword as User;
+    // Also return a message to prompt email verification
+    return {
+      ...userWithoutPassword,
+      message: 'Check your email to verify your account',
+    } as User & { message: string };
+  }
+
+  async verifyEmail(token: string): Promise<{ message: string; verified: boolean }> {
+    const prisma = this.database.getPrismaClient();
+
+    // Find valid, unexpired verification token
+    const verificationRecord = await prisma.verificationToken.findFirst({
+      where: {
+        token,
+        expires_at: { gt: new Date() },
+      },
+      include: { user: true },
+    });
+
+    if (!verificationRecord) {
+      throw new NotFoundException('Invalid or expired verification token');
+    }
+
+    const user = verificationRecord.user;
+
+    if (user.email_verified) {
+      // Already verified - return success with message
+      return {
+        message: 'Email already verified',
+        verified: true,
+      };
+    }
+
+    // Mark email as verified
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { email_verified: true },
+    });
+
+    // Delete used verification token
+    await prisma.verificationToken.delete({
+      where: { id: verificationRecord.id },
+    });
+
+    this.logger.log(`Email verified for user ${user.id} (${user.email})`);
+
+    return {
+      message: 'Email verified successfully',
+      verified: true,
+    };
   }
 
   async validateUserByEmail(email: string): Promise<User | null> {

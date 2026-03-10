@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PdfProcessor } from '../../src/documents/processors/pdf.processor';
+import { PdfProcessor } from '../../../src/documents/processors/pdf.processor';
 
 describe('PdfProcessor (DOC-06)', () => {
   let processor: PdfProcessor;

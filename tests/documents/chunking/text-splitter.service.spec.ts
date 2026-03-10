@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TextSplitterService } from '../../src/documents/chunking/text-splitter.service';
+import { TextSplitterService } from '../../../src/documents/chunking/text-splitter.service';
 
 describe('TextSplitterService (DOC-07)', () => {
   let service: TextSplitterService;

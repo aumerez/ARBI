@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DocumentQueueService } from '../../src/documents/document-queue.service';
-import { MockRedisService } from '../../mocks/redis.service';
-import { DocumentBuilder } from '../../conftest';
+import { DocumentQueueService } from '../../../src/documents/document-queue.service';
+import { MockRedisService } from '../mocks/redis.service';
+import { DocumentBuilder } from '../conftest';
 
 describe('DocumentQueueService (DOC-04, DOC-08)', () => {
   let service: DocumentQueueService;

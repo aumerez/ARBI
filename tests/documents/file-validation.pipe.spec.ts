@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { FileValidationPipe } from '../src/documents/file-validation.pipe';
+import { FileValidationPipe } from '../../src/documents/file-validation.pipe';
 
 describe('FileValidationPipe (DOC-02)', () => {
   let pipe: FileValidationPipe;

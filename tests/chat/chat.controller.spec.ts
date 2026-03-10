@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ChatController } from '../src/chat/chat.controller';
-import { MockPostgresService } from '../../mocks/postgres.service';
-import { MockRedisService } from '../../mocks/redis.service';
-import { ChunkBuilder } from '../../conftest';
+import { ChatController } from '../../src/chat/chat.controller';
+import { MockPostgresService } from '../mocks/postgres.service';
+import { MockRedisService } from '../mocks/redis.service';
+import { ChunkBuilder } from '../conftest';
 
 describe('ChatController (CHAT-01, CHAT-10)', () => {
   let controller: ChatController;

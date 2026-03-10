@@ -12,7 +12,7 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { PasswordResetDto } from './dto/password-reset.dto';
+import { PasswordResetRequestDto, PasswordResetConfirmDto } from './dto/password-reset.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { TenantGuard } from './guards/tenant.guard';
 import { User } from './types/user.entity';
@@ -26,11 +26,16 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+  @Get('verify/:token')
+  async verifyEmail(@Param('token') token: string) {
+    const result = await this.authService.verifyEmail(token);
+    return result;
+  }
+
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginDto) {
-    // Note: tenant_id comes from request context set by TenantContextMiddleware
-    // For now, we'll extract it from the DTO since that's what the login DTO includes
+  async login(@Body() loginDto: LoginDto & { tenant_id: number }) {
+    // tenant_id is provided in the DTO (from request body)
     const { accessToken, refreshToken } = await this.authService.login(
       loginDto,
       loginDto.tenant_id,
@@ -58,7 +63,7 @@ export class AuthController {
 
   @Post('password-reset/request')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async requestPasswordReset(@Body() dto: PasswordResetDto) {
+  async requestPasswordReset(@Body() dto: PasswordResetRequestDto & { tenant_id: number }) {
     await this.authService.requestPasswordReset(dto.email, dto.tenant_id);
     return;
   }
@@ -67,9 +72,9 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async resetPassword(
     @Param('token') token: string,
-    @Body() dto: { password: string; tenant_id: number },
+    @Body() dto: PasswordResetConfirmDto & { tenant_id: number },
   ) {
-    await this.authService.resetPassword(token, dto.password, dto.tenant_id);
+    await this.authService.resetPassword(token, dto.newPassword, dto.tenant_id);
     return;
   }
 }

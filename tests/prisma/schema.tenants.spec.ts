@@ -33,18 +33,17 @@ describe('Prisma Schema - Multi-tenancy', () => {
   });
 
   describe('Tenant-scoped tables', () => {
-    const tenantScopedTables = [
+    const standardTenantScopedTables = [
       'User',
       'Document',
       'DocumentChunk',
       'Chat',
       'ChatMessage',
       'RefreshToken',
-      'PasswordResetToken',
-      'AuditLog'
+      'PasswordResetToken'
     ];
 
-    tenantScopedTables.forEach((table) => {
+    standardTenantScopedTables.forEach((table) => {
       describe(`${table}`, () => {
         it(`should have tenant_id field as Int (not nullable)`, () => {
           const pattern = new RegExp(`model ${table} \\{[^}]*tenant_id\\s+Int`);
@@ -64,6 +63,28 @@ describe('Prisma Schema - Multi-tenancy', () => {
           expect(tableMatch).not.toBeNull();
           expect(tableMatch![0]).toMatch(pattern);
         });
+      });
+    });
+
+    describe('AuditLog', () => {
+      it('should have tenant_id field as Int (not nullable)', () => {
+        const pattern = new RegExp(`model AuditLog \\{[^}]*tenant_id\\s+Int`);
+        expect(schemaContent).toMatch(pattern);
+      });
+
+      it('should have @relation to tenants.id with onDelete Cascade', () => {
+        const pattern = new RegExp(
+          `tenant\\s+Tenant\\s+@relation\\(fields: \\[tenant_id\\], references: \\[id\\], onDelete: Cascade\\)`
+        );
+        expect(schemaContent).toMatch(pattern);
+      });
+
+      it('should have composite index on (tenant_id, created_at)', () => {
+        expect(schemaContent).toContain('@@index([tenant_id, created_at], name: "idx_audit_log_tenant_created")');
+      });
+
+      it('should have index on event_type', () => {
+        expect(schemaContent).toContain('@@index([event_type], name: "idx_audit_log_event")');
       });
     });
   });

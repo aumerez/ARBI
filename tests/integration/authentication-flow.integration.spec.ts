@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../src/app/app.module';
+import { AppModule } from '../../src/app/app.module';
 
 describe('Authentication Flow (AUTH-01, AUTH-02, AUTH-03, AUTH-04)', () => {
   let app: INestApplication;

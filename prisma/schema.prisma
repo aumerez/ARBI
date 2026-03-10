@@ -21,6 +21,7 @@ model Tenant {
   documentChunks DocumentChunk[]
   refreshTokens RefreshToken[]
   passwordResetTokens PasswordResetToken[]
+  verificationTokens VerificationToken[]
   auditLogs    AuditLog[]
 }
 
@@ -38,6 +39,7 @@ model User {
   chats            Chat[]
   refreshTokens    RefreshToken[]
   passwordResetTokens PasswordResetToken[]
+  verificationTokens VerificationToken[]
 
   @@index([tenant_id])
   @@index([email])
@@ -157,6 +159,22 @@ model PasswordResetToken {
   @@index([tenant_id])
   @@index([user_id])
   @@index([token_hash])
+}
+
+model VerificationToken {
+  id               Int            @id @default(autoincrement())
+  tenant_id        Int
+  user_id          Int
+  token            String         @unique
+  expires_at       DateTime
+  created_at       DateTime       @default(now())
+
+  tenant           Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  user             User           @relation(fields: [user_id], references: [id])
+
+  @@index([tenant_id])
+  @@index([user_id])
+  @@index([token])
 }
 
 model AuditLog {

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LoginPipe } from '../src/auth/login.pipe';
+import { LoginPipe } from '../../src/auth/login.pipe';
 import { classValidatorValidate } from '../conftest';
 
 describe('LoginPipe', () => {

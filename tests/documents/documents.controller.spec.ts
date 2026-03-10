@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DocumentsController } from '../src/documents/documents.controller';
-import { MockPostgresService } from '../../mocks/postgres.service';
-import { MockRedisService } from '../../mocks/redis.service';
-import { DocumentBuilder } from '../../conftest';
+import { DocumentsController } from '../../src/documents/documents.controller';
+import { MockPostgresService } from '../mocks/postgres.service';
+import { MockRedisService } from '../mocks/redis.service';
+import { DocumentBuilder } from '../conftest';
 
 describe('DocumentsController', () => {
   let controller: DocumentsController;

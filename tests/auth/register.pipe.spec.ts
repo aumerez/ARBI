@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RegisterPipe } from '../src/auth/register.pipe';
+import { RegisterPipe } from '../../src/auth/register.pipe';
 import { classValidatorValidate } from '../conftest';
 
 describe('RegisterPipe', () => {

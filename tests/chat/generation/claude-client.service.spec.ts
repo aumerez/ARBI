@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ClaudeClientService } from '../../src/chat/generation/claude-client.service';
+import { ClaudeClientService } from '../../../src/chat/generation/claude-client.service';
 import { HttpModule } from '@nestjs/axios';
 
 describe('ClaudeClientService (CHAT-03)', () => {

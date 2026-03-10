@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DocxProcessor } from '../../src/documents/processors/docx.processor';
+import { DocxProcessor } from '../../../src/documents/processors/docx.processor';
 
 describe('DocxProcessor (DOC-06)', () => {
   let processor: DocxProcessor;

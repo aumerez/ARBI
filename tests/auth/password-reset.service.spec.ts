@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PasswordResetService } from '../src/auth/password-reset.service';
+import { PasswordResetService } from '../../src/auth/password-reset.service';
 import { MockPostgresService } from '../mocks/postgres.service';
 
 describe('PasswordResetService (AUTH-04)', () => {

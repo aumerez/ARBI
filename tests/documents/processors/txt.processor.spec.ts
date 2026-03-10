@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TxtProcessor } from '../../src/documents/processors/txt.processor';
+import { TxtProcessor } from '../../../src/documents/processors/txt.processor';
 
 describe('TxtProcessor (DOC-06)', () => {
   let processor: TxtProcessor;
