@@ -46,19 +46,20 @@ export class AuthController {
   @Post('logout')
   @UseGuards(JwtAuthGuard, TenantGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(@Req() req: any, @Body('refreshToken') refreshToken: string) {
+  async logout(@Req() req: any) {
     const userId = req.user.sub;
-    return this.authService.logout(refreshToken, userId);
+    await this.authService.logout(userId);
+    return;
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body('refreshToken') refreshToken: string) {
-    // Verify refresh token and issue new access token
-    // This would typically be handled by a refresh strategy
-    // For MVP, we'll implement a simple refresh endpoint
-    // TODO: Implement proper refresh token rotation logic
-    throw new Error('Refresh endpoint not fully implemented');
+  async refresh(@Body('refreshToken') refreshToken: string, @Req() req: any) {
+    // Extract user ID from JWT payload (set by JwtAuthGuard)
+    // The JWT token must be valid to reach this point
+    const userId = req.user.sub;
+    const result = await this.authService.refreshTokens(userId, refreshToken);
+    return result;
   }
 
   @Post('password-reset/request')

@@ -196,22 +196,35 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async logout(refreshToken: string, userId: number): Promise<void> {
-    if (!refreshToken) {
-      throw new BadRequestException('Refresh token required');
-    }
-
+  async logout(userId: number): Promise<void> {
+    // Invalidate all refresh tokens for this user (logout from all devices)
+    // This is simpler and more secure than validating a specific token
     const prisma = this.database.getPrismaClient();
 
-    // Retrieve all non-revoked refresh tokens for user
+    const result = await prisma.refreshToken.deleteMany({
+      where: { user_id: userId, revoked: false },
+    });
+
+    this.logger.log(`User logged out: userId ${userId}, deleted ${result.count} refresh tokens`);
+  }
+
+  /**
+   * Refresh token rotation (AUTH-02)
+   * Validates old refresh token, issues new access + refresh tokens
+   * Old refresh token is invalidated (deleted)
+   */
+  async refreshTokens(userId: number, plainRefreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+    const prisma = this.database.getPrismaClient();
+
+    // Find all non-revoked refresh tokens for user
     const tokens = await prisma.refreshToken.findMany({
       where: { user_id: userId, revoked: false },
     });
 
     // Find matching token by comparing plaintext with stored hash
-    let matchedToken = null;
+    let matchedToken: any = null;
     for (const token of tokens) {
-      const valid = await bcrypt.compare(refreshToken, token.token_hash);
+      const valid = await bcrypt.compare(plainRefreshToken, token.token_hash);
       if (valid) {
         matchedToken = token;
         break;
@@ -222,13 +235,56 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    // Revoke the token
-    await prisma.refreshToken.update({
-      where: { id: matchedToken.id },
-      data: { revoked: true },
+    // Fetch user to build JWT payload
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
     });
 
-    this.logger.log(`User logged out: userId ${userId}`);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Build JWT payload (sub, email, tenant_id)
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      tenant_id: user.tenant_id,
+    };
+
+    // Generate new access token (15 minutes)
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: '15m',
+      secret: this.config.get<string>('JWT_SECRET'),
+    });
+
+    // Generate new refresh token (7 days)
+    const newRefreshToken = this.jwtService.sign(payload, {
+      expiresIn: '7d',
+      secret: this.config.get<string>('JWT_SECRET'),
+    });
+
+    // Hash new refresh token for storage
+    const newTokenHash = await bcrypt.hash(newRefreshToken, 12);
+
+    // Store new refresh token in DB
+    await prisma.refreshToken.create({
+      data: {
+        user_id: user.id,
+        tenant_id: user.tenant_id,
+        token_hash: newTokenHash,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        revoked: false,
+      },
+    });
+
+    // Invalidate old refresh token (delete or revoke)
+    await prisma.refreshToken.delete({
+      where: { id: matchedToken.id },
+    });
+
+    this.logger.log(`Token rotated for user ${userId}`);
+
+    return { accessToken, refreshToken: newRefreshToken };
   }
 
   async requestPasswordReset(email: string, tenantId: number): Promise<void> {
