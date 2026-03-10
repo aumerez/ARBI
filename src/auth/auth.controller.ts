@@ -53,6 +53,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @UseGuards(JwtAuthGuard, TenantGuard)
   @HttpCode(HttpStatus.OK)
   async refresh(@Body('refreshToken') refreshToken: string, @Req() req: any) {
     // Extract user ID from JWT payload (set by JwtAuthGuard)
