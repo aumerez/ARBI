@@ -45,7 +45,17 @@ export class StreamingService {
       embedding: r.embedding,
     }));
 
-    // 3. Build conversation context - fetch all messages including the one just saved
+    // 3. Check for no context - refuse to answer if no relevant documents retrieved
+    if (chunks.length === 0) {
+      this.logger.warn(`No context retrieved for chat ${chatId}, query: "${query.substring(0, 100)}..."`);
+      // Return refusal message
+      const refusalMessage = 'I cannot answer because no relevant documents were found.';
+      yield { type: 'text', text: refusalMessage };
+      yield { type: 'done' };
+      return;
+    }
+
+    // 4. Build conversation context - fetch all messages including the one just saved
     const history = await prisma.chatMessage.findMany({
       where: { chat_id: chatId },
       orderBy: { created_at: 'asc' },
@@ -146,10 +156,6 @@ export class StreamingService {
 IMPORTANT: When answering, if the information comes from the retrieved context, you must include citations in the format [N] where N is the source number. For example, if you use information from the first retrieved document, cite it as [1].
 
 BE PRECISE: Only cite sources that directly support the specific statement you're making. Do not cite if the context doesn't contain the information.`;
-
-    if (chunks.length === 0) {
-      return basePrompt + '\n\nNo retrieved context is available for this question. Answer based on your general knowledge, but note that you may not have access to company-specific information.';
-    }
 
     const contextSection = chunks.map((c, index) => `[${index + 1}] Document: ${c.documentName}${c.pageNumber ? ` (Page ${c.pageNumber})` : ''}\nContent: ${c.content}`).join('\n\n');
 
