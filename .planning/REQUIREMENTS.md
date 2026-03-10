@@ -67,7 +67,7 @@ Requirements for initial MVP release. Each maps to roadmap phases.
 - [ ] **QUAL-01**: System logs all queries and responses for audit trail (tenant-scoped)
 - [ ] **QUAL-02**: System maintains document versioning (immutable upload history)
 - [x] **QUAL-03**: System validates response citations against retrieved sources (no fake citations)
-- [ ] **QUAL-04**: System implements rate limiting per user to prevent abuse
+- [x] **QUAL-04**: System implements rate limiting per user to prevent abuse
 - [x] **QUAL-05**: System encrypts sensitive data at rest (JWT secrets, API keys)
 
 ## v2 Requirements
