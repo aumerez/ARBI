@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, Inject } from '@nestjs/common';
 import { DatabaseService } from '../shared/database/database.service';
 import { Queue } from 'bullmq';
 import { QdrantService } from '../shared/infrastructure/qdrant.service';
@@ -21,7 +21,7 @@ export class DocumentsService {
 
   constructor(
     private readonly database: DatabaseService,
-    private readonly queue: Queue, // 'document-upload' queue
+    @Inject('DOCUMENT_UPLOAD_QUEUE') private readonly queue: Queue,
     private readonly qdrant: QdrantService,
   ) {}
 

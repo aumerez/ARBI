@@ -20,6 +20,23 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     await this.prisma.$executeRaw`RESET app.current_tenant`;
   }
 
+  async getCurrentTenant(): Promise<number | null> {
+    try {
+      const result = await this.prisma.$queryRaw<{ current_setting: string }[]>`
+        SELECT current_setting('app.current_tenant', true) as current_setting
+      `;
+      if (result.length > 0 && result[0].current_setting) {
+        const parsed = parseInt(result[0].current_setting, 10);
+        return isNaN(parsed) ? null : parsed;
+      }
+      return null;
+    } catch (error) {
+      // If setting not set, returns null
+      this.logger.debug('No tenant context set');
+      return null;
+    }
+  }
+
   getPrismaClient(): PrismaClient {
     return this.prisma;
   }
