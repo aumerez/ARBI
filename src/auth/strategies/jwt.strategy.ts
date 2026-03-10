@@ -24,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(req: Request, payload: any): Promise<{ userId: number; email: string; tenantId: number }> {
+  async validate(req: Request, payload: any): Promise<{ userId: number; email: string; tenantId: number; email_verified: boolean }> {
     this.logger.debug('Validating JWT token', { sub: payload.sub });
 
     // Ensure payload has tenant_id
@@ -47,6 +47,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       userId: user.id,
       email: user.email,
       tenantId: user.tenant_id,
+      email_verified: user.email_verified,
     };
   }
 }
