@@ -53,7 +53,7 @@
 5. System refuses to answer when no relevant context found (no hallucinations) and indicates confidence/grounding when sources are weak
 6. System validates response citations against retrieved sources to prevent fake citations
 
-**Plans:** 6 plans in 5 waves
+**Plans:** 6 main plans + 4 gap-closure sub-plans
 
 **Plan list:**
 - [x] **01-backend-mvp-01-PLAN-01-test-scaffold** - Initialize Jest test framework and create all 20 test file scaffolds for TDD approach (Wave 0)
@@ -66,10 +66,34 @@
   - ✅ 02b: RLS migration with tenant isolation policies (enabled on 8 tables, current_setting filter, cascade FKs)
   - ✅ 02c: Database service module (DatabaseService with tenant context management, global module)
   - ✅ 02d: Redis and Qdrant clients (BullMQ queue, vector store connection)
-  - ✅ 02e: Provider services base (embedding, LLM, reranker interfaces) (Completed 2026-03-09)
-  - ✅ 02f: Provider implementations (OpenAI, Anthropic, Ollama) (Completed 2026-03-09)
-  - ✅ 02g: AppModule wiring (Module imports, provider configuration, database initialization) (Completed 2026-03-09)
-- [ ] **01-backend-mvp-03-PLAN-03-auth** - Implement JWT authentication with email verification, password reset, and tenant context middleware (Wave 2)
+  - ✅ 02e: Provider services base (embedding, LLM, reranker interfaces)
+  - ✅ 02f: Provider implementations (OpenAI, Anthropic, Ollama)
+  - ✅ 02g: AppModule wiring (Module imports, provider configuration, database initialization)
+- [ ] **01-backend-mvp-03-PLAN-03-auth** - Implement JWT authentication with password reset and tenant context middleware (Wave 2)
+  - ⚠️  Note: Core auth (login, registration, password reset) implemented in Wave 2, but gap-closure added email verification (06f) and refresh token rotation (06g)
+- [x] **01-backend-mvp-04-PLAN-04-documents** - Build document upload pipeline with BullMQ async workers, text extraction, semantic chunking, embedding generation (Wave 3)
+  - ✅ 04a: Document processing workers and processors
+  - ✅ 04b: Semantic text chunking service
+  - ✅ 04c: Document status tracking and updates
+  - ✅ 04d: Document upload controller with tenant isolation
+  - ✅ 04e: Documents module and integration
+- [ ] **01-backend-mvp-05-PLAN-05-chat-rag** - Implement RAG engine: hybrid search with RRF, Claude streaming, citation validation, no-context guard (Wave 4)
+  - ✅ 05a: Chat conversation management with authentication
+  - ✅ 05b: Hybrid search with vector + BM25 (RRF fusion)
+  - ✅ 05c: Reranker for improved result ordering
+  - ✅ 05d: LLM generation with streaming and citations
+  - ✅ 05e: Citation validation
+  - ⚠️  Note: Gap closure added missing features: 06h (no-context refusal) and 06i (confidence/grounding)
+- [x] **01-backend-mvp-06-PLAN-06-crosscutting** - Add rate limiting, audit logging, encryption service, soft deletes, structured logging, error handling (Wave 5)
+  - ✅ 06a: Encryption service and audit tables (AES-256-GCM, RLS policy)
+  - ✅ 06b: Audit logging integration
+  - ✅ 06c: Rate limiting middleware
+  - ✅ 06d: Global middleware and interceptors
+  - ✅ 06e: Finalization and error handling polish
+  - ✅ 06f: Gap closure - Email verification (AUTH-01)  ← NEW
+  - ✅ 06g: Gap closure - Refresh token rotation (AUTH-02)  ← NEW
+  - ✅ 06h: Gap closure - No-context refusal (CHAT-11)  ← NEW
+  - ✅ 06i: Gap closure - Confidence/grounding (CHAT-12)  ← NEW
 - [x] **01-backend-mvp-04-PLAN-04-documents** - Build document upload pipeline with BullMQ async workers, text extraction, semantic chunking, embedding generation (Wave 3)
   - ✅ 04a: Document processing workers and processors (Completed 2026-03-09)
   - ✅ 04b: Semantic text chunking service (Completed 2026-03-09)
