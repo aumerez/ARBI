@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ProviderFactory } from '../../shared/infrastructure/providers/provider.factory';
-import { HybridSearchService } from '../retrieval/hybrid-search.service';
+import { HybridSearchService, SearchMetrics } from '../retrieval/hybrid-search.service';
 import { DatabaseService } from '../../shared/database/database.service';
-import { ChatMessage } from '../types/chat.types';
+import { ChatMessage, ConfidenceMetrics } from '../types/chat.types';
 import { LLMProvider, StreamChunk, RetrievedChunk } from '../../shared/types/providers.interface';
 import { CitationValidatorService } from '../validation/citation-validator.service';
 
@@ -34,9 +34,9 @@ export class StreamingService {
       },
     });
 
-    // 2. Retrieve relevant chunks
-    const searchResults = await this.hybridSearch.search(query, tenantId, 10);
-    const chunks: RetrievedChunk[] = searchResults.map(r => ({
+    // 2. Retrieve relevant chunks with metrics
+    const searchResult = await this.hybridSearch.search(query, tenantId, 10);
+    const chunks: RetrievedChunk[] = searchResult.chunks.map(r => ({
       id: String(r.chunkId),
       content: r.content,
       documentName: r.documentName,
@@ -45,17 +45,20 @@ export class StreamingService {
       embedding: r.embedding,
     }));
 
-    // 3. Check for no context - refuse to answer if no relevant documents retrieved
+    // 3. Compute confidence score from retrieval metrics
+    const confidence = this.calculateConfidence(searchResult.metrics);
+
+    // 4. Check for no context - refuse to answer if no relevant documents retrieved
     if (chunks.length === 0) {
       this.logger.warn(`No context retrieved for chat ${chatId}, query: "${query.substring(0, 100)}..."`);
       // Return refusal message
       const refusalMessage = 'I cannot answer because no relevant documents were found.';
-      yield { type: 'text', text: refusalMessage };
-      yield { type: 'done' };
+      yield { type: 'text', text: refusalMessage, confidence };
+      yield { type: 'done', confidence };
       return;
     }
 
-    // 4. Build conversation context - fetch all messages including the one just saved
+    // 5. Build conversation context - fetch all messages including the one just saved
     const history = await prisma.chatMessage.findMany({
       where: { chat_id: chatId },
       orderBy: { created_at: 'asc' },
@@ -69,6 +72,9 @@ export class StreamingService {
 
     // 4. Get LLM provider
     const llmProvider = this.providerFactory.getLLMProvider();
+
+    // 5. Build system prompt with grounding based on confidence
+    const systemPrompt = this.buildSystemPrompt(chunks, confidence);
 
     // 6. Stream response
     let fullText = '';
@@ -113,9 +119,9 @@ export class StreamingService {
       // Looking at ClaudeLLMProvider.buildSystemPrompt, it uses [N] format, not <cite> tags.
       // That's okay for MVP. We'll accept it.
       //
-      // So we'll call provider.streamChat(messages, chunks) as originally intended.
+      // So we'll call provider.streamChat(messages, chunks, systemPrompt) with custom prompt
 
-      for await (const chunk of llmProvider.streamChat(messages, chunks)) {
+      for await (const chunk of llmProvider.streamChat(messages, chunks, systemPrompt)) {
         if (chunk.type === 'text' && chunk.text) {
           fullText += chunk.text;
           yield chunk;
@@ -137,7 +143,7 @@ export class StreamingService {
           chat_id: chatId,
           role: 'assistant',
           content: fullText,
-          retrieved_chunk_ids: searchResults.map(r => r.chunkId),
+          retrieved_chunk_ids: searchResult.chunks.map(r => r.chunkId),
           tenant_id: tenantId,
         },
       });
@@ -150,12 +156,18 @@ export class StreamingService {
     }
   }
 
-  private buildSystemPrompt(chunks: RetrievedChunk[]): string {
-    const basePrompt = `You are a helpful assistant that answers questions based on the provided context.
+  private buildSystemPrompt(chunks: RetrievedChunk[], confidence: ConfidenceMetrics): string {
+    let basePrompt = `You are a helpful assistant that answers questions based on the provided context.
 
 IMPORTANT: When answering, if the information comes from the retrieved context, you must include citations in the format [N] where N is the source number. For example, if you use information from the first retrieved document, cite it as [1].
 
 BE PRECISE: Only cite sources that directly support the specific statement you're making. Do not cite if the context doesn't contain the information.`;
+
+    // Add grounding prefix for low/medium confidence
+    const groundingPrefix = this.getGroundingPrefix(confidence.level);
+    if (groundingPrefix) {
+      basePrompt += `\n\n${groundingPrefix}`;
+    }
 
     const contextSection = chunks.map((c, index) => `[${index + 1}] Document: ${c.documentName}${c.pageNumber ? ` (Page ${c.pageNumber})` : ''}\nContent: ${c.content}`).join('\n\n');
 
@@ -164,5 +176,54 @@ BE PRECISE: Only cite sources that directly support the specific statement you'r
 Retrieved context (cite using [N]):
 
 ${contextSection}`;
+  }
+
+  /**
+   * Calculate confidence score from search metrics
+   * Score range: 0-1, higher = more confident
+   */
+  private calculateConfidence(metrics: SearchMetrics): ConfidenceMetrics {
+    const { count, avgScore, scoreVariance } = metrics;
+
+    // Normalize count: more chunks = higher confidence (max effect at 10+ chunks)
+    const countScore = Math.min(count / 10, 1) * 0.3;
+
+    // Normalize average score: already 0-1 range (RRF scores are 0-0.7ish)
+    // We'll normalize to 0-1 by assuming max RRF ~0.7
+    const normalizedAvg = Math.min(avgScore / 0.7, 1);
+    const avgScoreWeight = normalizedAvg * 0.5;
+
+    // Variance penalty: low variance (tight clustering) = more confident
+    // High variance = less confident. Typical RRF variance might be 0.001-0.01
+    const variancePenalty = Math.min(scoreVariance * 10, 1) * 0.2; // up to 20% penalty
+
+    const totalScore = countScore + avgScoreWeight - variancePenalty;
+    const clampedScore = Math.max(0, Math.min(1, totalScore));
+
+    // Determine level based on score thresholds
+    let level: 'high' | 'medium' | 'low';
+    if (clampedScore > 0.7) {
+      level = 'high';
+    } else if (clampedScore > 0.4) {
+      level = 'medium';
+    } else {
+      level = 'low';
+    }
+
+    return { score: clampedScore, level };
+  }
+
+  /**
+   * Get grounding prefix text for system prompt based on confidence level
+   */
+  private getGroundingPrefix(level: 'high' | 'medium' | 'low'): string | null {
+    switch (level) {
+      case 'medium':
+        return 'NOTE: The retrieved context is limited. Answer based on the provided documents, and be cautious in your assertions.';
+      case 'low':
+        return 'IMPORTANT: The retrieved context is weak or minimal. Explicitly state that your answer is based on limited information from the documents.';
+      default:
+        return null; // No prefix for high confidence
+    }
   }
 }

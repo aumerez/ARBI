@@ -24,9 +24,11 @@ export class ClaudeLLMProvider implements LLMProvider, OnModuleInit, OnModuleDes
 
   async *streamChat(
     messages: { role: 'user' | 'assistant'; content: string }[],
-    context: RetrievedChunk[]
+    context: RetrievedChunk[],
+    systemPrompt?: string
   ): AsyncIterable<StreamChunk> {
-    const systemPrompt = this.buildSystemPrompt(context);
+    // Use custom systemPrompt if provided; otherwise build default from context
+    const finalSystemPrompt = systemPrompt || this.buildSystemPrompt(context);
     const formattedMessages = this.formatMessages(messages);
 
     try {
@@ -34,7 +36,7 @@ export class ClaudeLLMProvider implements LLMProvider, OnModuleInit, OnModuleDes
         {
           model: this.model,
           max_tokens: this.maxTokens,
-          system: systemPrompt,
+          system: finalSystemPrompt,
           messages: formattedMessages,
           temperature: this.temperature,
         },

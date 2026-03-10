@@ -35,9 +35,10 @@ export class LocalLLMProvider implements LLMProvider, OnModuleInit, OnModuleDest
 
   async *streamChat(
     messages: { role: 'user' | 'assistant'; content: string }[],
-    context: RetrievedChunk[]
+    context: RetrievedChunk[],
+    systemPrompt?: string
   ): AsyncIterable<StreamChunk> {
-    const prompt = this.buildPrompt(messages, context);
+    const prompt = this.buildPrompt(messages, context, systemPrompt);
 
     try {
       const response = await firstValueFrom(
@@ -100,11 +101,13 @@ export class LocalLLMProvider implements LLMProvider, OnModuleInit, OnModuleDest
 
   private buildPrompt(
     messages: { role: 'user' | 'assistant'; content: string }[],
-    context: RetrievedChunk[]
+    context: RetrievedChunk[],
+    systemPrompt?: string
   ): string {
-    const systemPrompt = this.buildSystemPrompt(context);
+    // Use custom systemPrompt if provided; otherwise build default from context
+    const finalSystemPrompt = systemPrompt || this.buildSystemPrompt(context);
     const conversation = this.formatConversation(messages);
-    return `${systemPrompt}\n\n${conversation}`;
+    return `${finalSystemPrompt}\n\n${conversation}`;
   }
 
   private buildSystemPrompt(context: RetrievedChunk[]): string {

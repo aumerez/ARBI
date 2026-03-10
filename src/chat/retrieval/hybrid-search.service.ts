@@ -15,6 +15,18 @@ export interface SearchResult {
   embedding?: number[];
 }
 
+export interface SearchMetrics {
+  count: number;
+  avgScore: number;
+  maxScore: number;
+  scoreVariance: number;
+}
+
+export interface SearchResultWithMetrics {
+  chunks: SearchResult[];
+  metrics: SearchMetrics;
+}
+
 const RRF_K = 60;
 const SEMANTIC_WEIGHT = 0.7;
 const LEXICAL_WEIGHT = 0.3;
@@ -43,7 +55,7 @@ export class HybridSearchService implements OnModuleInit, OnModuleDestroy {
     query: string,
     tenantId: number,
     topK: number = 10,
-  ): Promise<SearchResult[]> {
+  ): Promise<SearchResultWithMetrics> {
     this.logger.log(`Hybrid search: query="${query}", tenantId=${tenantId}, topK=${topK}`);
 
     // Step 1: Generate query embedding
@@ -116,7 +128,7 @@ export class HybridSearchService implements OnModuleInit, OnModuleDestroy {
       });
 
     // Ensure all required SearchResult fields are present (some may be undefined if not populated)
-    return finalResults.map(r => ({
+    const resultChunks: SearchResult[] = finalResults.map(r => ({
       chunkId: r.chunkId,
       documentId: r.documentId!,
       documentName: r.documentName!,
@@ -125,6 +137,11 @@ export class HybridSearchService implements OnModuleInit, OnModuleDestroy {
       score: r.score,
       embedding: r.embedding,
     }));
+
+    // Compute quality metrics from scores
+    const metrics = this.computeMetrics(resultChunks);
+
+    return { chunks: resultChunks, metrics };
   }
 
   private async bm25Search(
@@ -250,5 +267,22 @@ export class HybridSearchService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       this.logger.error('Failed to populate document metadata', error);
     }
+  }
+
+  private computeMetrics(chunks: SearchResult[]): SearchMetrics {
+    const count = chunks.length;
+    if (count === 0) {
+      return { count: 0, avgScore: 0, maxScore: 0, scoreVariance: 0 };
+    }
+
+    const scores = chunks.map(c => c.score);
+    const sum = scores.reduce((a, b) => a + b, 0);
+    const avgScore = sum / count;
+    const maxScore = Math.max(...scores);
+
+    // Compute variance (population variance)
+    const variance = scores.reduce((sum, score) => sum + Math.pow(score - avgScore, 2), 0) / count;
+
+    return { count, avgScore, maxScore, scoreVariance: variance };
   }
 }

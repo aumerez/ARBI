@@ -30,4 +30,13 @@ export interface StreamChunk {
   text?: string;
   citations?: Citation[];
   error?: string;
+  confidence?: {
+    score: number;
+    level: 'high' | 'medium' | 'low';
+  };
+}
+
+export interface ConfidenceMetrics {
+  score: number;
+  level: 'high' | 'medium' | 'low';
 }

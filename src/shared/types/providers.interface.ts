@@ -12,11 +12,13 @@ export interface LLMProvider {
    * Stream chat completions from LLM
    * @param messages Chat history with role and content
    * @param context Retrieved document chunks for grounding
+   * @param systemPrompt Optional custom system prompt (overrides provider's default)
    * @returns AsyncIterable yielding StreamChunk events
    */
   streamChat(
     messages: { role: 'user' | 'assistant'; content: string }[],
-    context: RetrievedChunk[]
+    context: RetrievedChunk[],
+    systemPrompt?: string
   ): AsyncIterable<StreamChunk>;
 }
 
@@ -25,6 +27,10 @@ export interface StreamChunk {
   text?: string;
   citations?: Citation[];
   error?: string;
+  confidence?: {
+    score: number;
+    level: 'high' | 'medium' | 'low';
+  };
 }
 
 export interface RetrievedChunk {
